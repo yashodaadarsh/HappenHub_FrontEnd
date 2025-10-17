@@ -25,40 +25,27 @@ export const checkAuthStatus = createAsyncThunk(
 // Async thunk for fetching events with pagination, search, filters, and sorting
 export const fetchEvents = createAsyncThunk(
   "explore/fetchEvents",
-  async ({ type, page = 0, size = 10, search = "", filterType = "", sortBy = "", authPayload = null }, { rejectWithValue }) => {
+  async ({ page = 0, size = 10, search = "", filterType = "", sortBy = "" }, { rejectWithValue }) => {
     try {
-      if (type === 'dashboard') {
-
-        console.log("email : " , authPayload.email);
-
-        
-
-        // For dashboard, use recommendation service
-        const response = await axios.get(GET_PERSONALIZED_FEED, {
-          headers: { "X-email": authPayload.email },
-        });
+      // For explore page, use search service
+      if (search) {
+        const response = await axios.get(`${SEARCH_EVENTS}/${search}`);
+        return response.data;
+      } else if (filterType) {
+        const response = await axios.get(`${GET_EVENTS_BY_TYPE}/${filterType}`);
         return response.data;
       } else {
-        // For explore, use search service
-        if (search) {
-          const response = await axios.get(`${SEARCH_EVENTS}/${search}`);
-          return response.data;
-        } else if (filterType) {
-          const response = await axios.get(`${GET_EVENTS_BY_TYPE}/${filterType}`);
-          return response.data;
-        } else {
-          let url = GET_EVENTS_PAGED;
-          const params = new URLSearchParams();
+        let url = GET_EVENTS_PAGED;
+        const params = new URLSearchParams();
 
-          if (page !== undefined) params.append('page', page);
-          if (size !== undefined) params.append('size', size);
-          if (sortBy) params.append('sortBy', sortBy);
+        if (page !== undefined) params.append('page', page);
+        if (size !== undefined) params.append('size', size);
+        if (sortBy) params.append('sortBy', sortBy);
 
-          if (params.toString()) url += `?${params.toString()}`;
+        if (params.toString()) url += `?${params.toString()}`;
 
-          const response = await axios.get(url);
-          return response.data;
-        }
+        const response = await axios.get(url);
+        return response.data;
       }
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || "Failed to fetch events");

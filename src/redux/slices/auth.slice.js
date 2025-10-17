@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
-import { SIGNUP, LOGIN, PING_AUTH, GET_PROFILE, UPDATE_PROFILE } from "../../api/apis";
+import { SIGNUP, LOGIN, PING_AUTH, GET_PROFILE, UPDATE_PROFILE, GET_PERSONALIZED_FEED } from "../../api/apis";
 
 export const signupUser = createAsyncThunk(
   "auth/signupUser",
@@ -198,5 +198,40 @@ export const initializeAuth = () => (dispatch) => {
     dispatch(fetchProfile());
   }
 };
+
+export const initializeAuthAndFetchFeed = () => (dispatch) => {
+  const token = localStorage.getItem("authToken");
+  if (token) {
+    // Set token in state and fetch profile
+    dispatch({ type: 'auth/setToken', payload: token });
+    dispatch(fetchProfile()).then(() => {
+      // Fetch personalized feed after profile is loaded
+      dispatch(fetchPersonalizedFeed());
+    });
+  }
+};
+
+export const fetchPersonalizedFeed = createAsyncThunk(
+  "recommendation/fetchPersonalizedFeed",
+  async (_, { rejectWithValue, getState }) => {
+    try {
+      const { auth } = getState();
+
+      console.log("Fetching personalized feed for email:", auth.user?.email);
+      console.log("Auth user object:", auth.user);
+      const response = await axios.get(GET_PERSONALIZED_FEED, {
+        headers: {
+          "X-email": auth.user?.email || auth.userDetails?.email,
+        },
+      });
+
+      console.log("Personalized feed response :", response);
+      return response.data;
+    } catch (error) {
+        console.log("Error fetching personalized feed:", error);
+      return rejectWithValue(error.response?.data?.message || "Failed to fetch personalized feed");
+    }
+  }
+);
 
 export default authSlice.reducer;

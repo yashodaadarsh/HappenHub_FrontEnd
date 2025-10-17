@@ -2,28 +2,27 @@ import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { motion } from "framer-motion";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
-import { fetchEvents } from "../redux/slices/explore.slice";
+import {  setEvents } from "../redux/slices/recommendation.slice";
 import EventCard from "../components/EventCard";
 import { FaHome, FaHeart, FaCog, FaBars, FaTimes } from "react-icons/fa";
+import { GET_PERSONALIZED_FEED } from "../api/apis";
+import axios from "axios";
 
 const Dashboard = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
-  const { events, loading, error } = useSelector((state) => state.explore);
+  const { events, loading, error } = useSelector((state) => state.recommendation);
+  const { authLoading } = useSelector((state) => state.auth);
   const { isLoggedIn, user, userDetails } = useSelector((state) => state.auth);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  useEffect(() => {
-    if (isLoggedIn && user) {
-      dispatch(fetchEvents({ type: 'dashboard', authPayload: { email: user.email } }));
-    }
-  }, [dispatch, isLoggedIn, user]);
+  // Remove the useEffect from Dashboard since we're now fetching in initializeAuthAndFetchFeed
 
   // Check if we're on the main dashboard route (not nested)
   const isMainDashboard = location.pathname === "/dashboard";
 
-  if (loading && isMainDashboard) {
+  if ((loading || authLoading) && isMainDashboard) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-richblack-900 text-white">
         <div className="text-xl">Loading your personalized events...</div>
