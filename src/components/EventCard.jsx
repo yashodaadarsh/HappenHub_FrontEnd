@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { motion } from "framer-motion";
 import { FaHeart, FaRegHeart } from "react-icons/fa";
 import { addToWishlist, removeFromWishlist } from "../redux/slices/wishlist.slice";
+import toast, { Toaster } from "react-hot-toast";
 
 const EventCard = ({ event, index }) => {
   const navigate = useNavigate();
@@ -21,14 +22,16 @@ const EventCard = ({ event, index }) => {
     e.stopPropagation(); // Prevent triggering the card click
 
     if (!isLoggedIn || !user) {
-      // Could show a login prompt here
+      toast.error("Please log in to add events to your wishlist!");
       return;
     }
 
     if (isWishlisted) {
       dispatch(removeFromWishlist({ eventId: event.event_id, userEmail: user.email }));
+      toast.success("Removed from wishlist!");
     } else {
       dispatch(addToWishlist({ eventId: event.event_id, userEmail: user.email }));
+      toast.success("Added to wishlist!");
     }
   };
 
@@ -40,6 +43,7 @@ const EventCard = ({ event, index }) => {
       transition={{ delay: index * 0.1 }}
       className="bg-richblack-800 rounded-lg p-6 shadow-lg border border-richblack-700 hover:border-blue-400 transition-all hover:scale-105"
     >
+      <Toaster position="top-right" />
       {event.image_url && (
         <div className="mb-4">
           <img
@@ -91,7 +95,7 @@ const EventCard = ({ event, index }) => {
                 : "text-gray-400 hover:text-red-500"
             } ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
           >
-            {isWishlisted ? <FaHeart size={20} /> : <FaRegHeart size={20} />}
+            {isWishlisted ? <FaHeart size={20} className="text-red-500" /> : <FaRegHeart size={20} />}
           </button>
         )}
       </div>

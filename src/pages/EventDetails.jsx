@@ -1,11 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
 import { FaHeart, FaRegHeart } from "react-icons/fa";
+import { FiX } from "react-icons/fi";
 import { GET_EVENT_BY_ID } from "../api/apis";
 import { addToWishlist, removeFromWishlist } from "../redux/slices/wishlist.slice";
+import { generateResponse } from "../services/gemini.service";
+import { FiMessageCircle } from "react-icons/fi";
 
 const EventDetails = () => {
   const { eventId } = useParams();
@@ -17,11 +20,16 @@ const EventDetails = () => {
   const [event, setEvent] = useState(location.state?.event || null);
   const [loading, setLoading] = useState(!event);
   const [error, setError] = useState(null);
+  const [showChat, setShowChat] = useState(false);
+
+  // Chat state
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState("");
+  const [botTyping, setBotTyping] = useState(false);
 
   const isWishlisted = wishlistEventIds.includes(event?.event_id);
 
   useEffect(() => {
-    // If event data is not passed via props, fetch it from API
     if (!event) {
       const fetchEventDetails = async () => {
         try {
@@ -33,199 +41,194 @@ const EventDetails = () => {
           setLoading(false);
         }
       };
-
       fetchEventDetails();
     } else {
       setLoading(false);
     }
   }, [eventId, event]);
 
-  if (loading) {
+  if (loading)
     return (
-      <div className="min-h-screen flex items-center justify-center bg-richblack-900 text-white">
+      <div className="min-h-screen flex items-center justify-center text-white">
         <div className="text-xl">Loading event details...</div>
       </div>
     );
-  }
 
-  if (error) {
+  if (error)
     return (
-      <div className="min-h-screen flex items-center justify-center bg-richblack-900 text-white">
+      <div className="min-h-screen flex items-center justify-center text-white">
         <div className="text-xl text-pink-200">{error}</div>
       </div>
     );
-  }
 
-  if (!event) {
+  if (!event)
     return (
-      <div className="min-h-screen flex items-center justify-center bg-richblack-900 text-white">
+      <div className="min-h-screen flex items-center justify-center text-white">
         <div className="text-xl">Event not found</div>
       </div>
     );
-  }
 
-  const handleApply = () => {
-    window.open(event.event_link, "_blank", "noopener,noreferrer");
-  };
+  const handleApply = () => window.open(event.event_link, "_blank", "noopener,noreferrer");
 
   const handleWishlistToggle = () => {
-    if (!isLoggedIn || !user) {
-      // Could show a login prompt here
-      return;
-    }
-
-    if (isWishlisted) {
+    if (!isLoggedIn || !user) return;
+    if (isWishlisted)
       dispatch(removeFromWishlist({ eventId: event.event_id, userEmail: user.email }));
-    } else {
-      dispatch(addToWishlist({ eventId: event.event_id, userEmail: user.email }));
-    }
+    else dispatch(addToWishlist({ eventId: event.event_id, userEmail: user.email }));
+  };
+
+  const handleSend = async () => {
+    if (!input.trim()) return;
+    const newMessages = [...messages, { role: "user", content: input }];
+    setMessages(newMessages);
+    setInput("");
+    setBotTyping(true);
+    const reply = await generateResponse(newMessages, event.description);
+    setMessages([...newMessages, { role: "model", content: reply }]);
+    setBotTyping(false);
   };
 
   return (
-    <div className="min-h-screen bg-richblack-900 text-white px-6 py-12">
+    <div className="min-h-screen bg-richblack-900 text-white px-6 py-12 overflow-hidden">
       <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="max-w-4xl mx-auto"
+        className="max-w-6xl mx-auto flex transition-all duration-500"
+        animate={{
+          gridTemplateColumns: showChat ? "60% 40%" : "100% 0%",
+        }}
+        style={{
+          display: "grid",
+          gridTemplateColumns: showChat ? "60% 40%" : "100% 0%",
+          gap: "1rem",
+        }}
       >
-        {/* Event Name */}
-        <h1 className="text-4xl md:text-5xl font-bold text-center mb-8 bg-clip-text text-transparent bg-gradient-to-r from-pink-200 via-blue-100 to-yellow-50">
-          {event.title}
-        </h1>
+        {/* Left: Event Info */}
+        <motion.div
+          layout
+          animate={{ scale: showChat ? 0.95 : 1, opacity: showChat ? 0.9 : 1 }}
+          transition={{ duration: 0.3 }}
+          className="bg-richblack-800 p-8 rounded-xl shadow-lg"
+        >
+          {/* Event Name */}
+          <h1 className="text-4xl font-bold text-center mb-6 bg-clip-text text-transparent bg-gradient-to-r from-pink-200 via-blue-100 to-yellow-50">
+            {event.title}
+          </h1>
 
-        {/* Event Image */}
-        {event.image_url && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.2 }}
-            className="mb-8"
-          >
+          {/* Event Image */}
+          {event.image_url && (
             <img
               src={event.image_url}
               alt={event.title}
-              className="w-full h-96 object-cover rounded-lg shadow-lg"
+              className="w-full h-80 object-cover rounded-lg shadow-lg mb-6"
             />
-          </motion.div>
-        )}
+          )}
 
-        {/* Complete Description */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="mb-12"
-        >
-          <h2 className="text-2xl font-bold text-yellow-50 mb-4">AI Shortened Description</h2>
-          <p className="text-richblack-100 text-lg leading-relaxed">
+          {/* Description */}
+          <p className="text-richblack-100 text-lg leading-relaxed mb-6">
             {event.description}
           </p>
-        </motion.div>
 
-        {/* Timeline */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="mb-12"
-        >
-          <h2 className="text-2xl font-bold text-yellow-50 mb-6">Timeline</h2>
-          <div className="relative">
-            <div className="absolute left-8 top-0 bottom-0 w-0.5 bg-blue-500"></div>
-            <div className="space-y-8">
-              <div className="relative flex items-center">
-                <div className="absolute left-6 w-4 h-4 bg-blue-500 rounded-full border-4 border-richblack-900"></div>
-                <div className="ml-16">
-                  <h3 className="text-xl font-semibold text-blue-300">Start Date</h3>
-                  <p className="text-richblack-200">
-                    {new Date(event.start_date).toLocaleDateString("en-US", {
-                      weekday: "long",
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </p>
-                </div>
-              </div>
-              <div className="relative flex items-center">
-                <div className="absolute left-6 w-4 h-4 bg-green-500 rounded-full border-4 border-richblack-900"></div>
-                <div className="ml-16">
-                  <h3 className="text-xl font-semibold text-green-300">End Date</h3>
-                  <p className="text-richblack-200">
-                    {new Date(event.end_date).toLocaleDateString("en-US", {
-                      weekday: "long",
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Other Details */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          className="mb-12"
-        >
-          <h2 className="text-2xl font-bold text-yellow-50 mb-6">Details</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-richblack-800 rounded-lg p-6">
-              <h3 className="text-lg font-semibold text-blue-300 mb-2">Type</h3>
-              <p className="text-richblack-100">{event.type}</p>
-            </div>
-            <div className="bg-richblack-800 rounded-lg p-6">
-              <h3 className="text-lg font-semibold text-blue-300 mb-2">Location</h3>
-              <p className="text-richblack-100">{event.location}</p>
-            </div>
-            <div className="bg-richblack-800 rounded-lg p-6">
-              <h3 className="text-lg font-semibold text-blue-300 mb-2">Salary</h3>
-              <p className="text-richblack-100">{event.salary}</p>
-            </div>
-            <div className="bg-richblack-800 rounded-lg p-6">
-              <h3 className="text-lg font-semibold text-blue-300 mb-2">Event ID</h3>
-              <p className="text-richblack-100">{event.event_id}</p>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Action Buttons */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
-          className="flex flex-col sm:flex-row gap-4 justify-center items-center"
-        >
-          <button
-            onClick={handleApply}
-            className="px-8 py-4 bg-gradient-to-r from-green-500 to-green-600 text-white text-lg font-semibold rounded-lg hover:from-green-600 hover:to-green-700 transition-all transform hover:scale-105 shadow-lg"
-          >
-            Apply Now
-          </button>
-
-          {isLoggedIn && (
-            <button
-              onClick={handleWishlistToggle}
-              disabled={wishlistLoading}
-              className={`flex items-center gap-2 px-6 py-4 border-2 rounded-lg font-semibold transition-all transform hover:scale-105 ${
-                isWishlisted
-                  ? "border-red-500 text-red-500 bg-red-500/10 hover:bg-red-500/20"
-                  : "border-gray-500 text-gray-300 hover:border-red-500 hover:text-red-500"
-              } ${wishlistLoading ? "opacity-50 cursor-not-allowed" : ""}`}
+          {/* Ask AI Button */}
+          {!showChat && (
+            <motion.button
+              onClick={() => setShowChat(true)}
+              whileHover={{ scale: 1.05 }}
+              className="flex items-center gap-2 bg-blue-600 text-white font-semibold px-5 py-2 rounded-full shadow-md hover:bg-blue-700 transition-all ml-auto"
             >
-              {isWishlisted ? <FaHeart /> : <FaRegHeart />}
-              {isWishlisted ? "Remove from Wishlist" : "Add to Wishlist"}
-            </button>
+              <FiMessageCircle size={18} /> Ask AI
+            </motion.button>
           )}
+
+          {/* Timeline */}
+          <div className="mt-10">
+            <h2 className="text-2xl font-bold text-yellow-50 mb-4">Timeline</h2>
+            <p className="text-blue-300 font-semibold">
+              Start:{" "}
+              {new Date(event.start_date).toLocaleString("en-US", {
+                dateStyle: "long",
+                timeStyle: "short",
+              })}
+            </p>
+            <p className="text-green-300 font-semibold">
+              End:{" "}
+              {new Date(event.end_date).toLocaleString("en-US", {
+                dateStyle: "long",
+                timeStyle: "short",
+              })}
+            </p>
+          </div>
         </motion.div>
+
+        {/* Right: Chat Panel */}
+        <AnimatePresence>
+          {showChat && (
+            <motion.div
+              initial={{ x: 200, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: 200, opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="bg-richblack-800 rounded-xl shadow-xl flex flex-col overflow-hidden"
+            >
+              {/* Chat Header */}
+              <div className="flex justify-between items-center px-4 py-3 border-b border-richblack-700">
+                <h3 className="text-lg font-semibold text-yellow-50">
+                  Chat with HappenBot 🤖
+                </h3>
+                <button
+                  onClick={() => setShowChat(false)}
+                  className="text-gray-300 hover:text-white"
+                >
+                  <FiX size={20} />
+                </button>
+              </div>
+
+              {/* Chat Messages */}
+              <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-richblack-900">
+                {messages.map((msg, i) => (
+                  <div
+                    key={i}
+                    className={`flex ${
+                      msg.role === "user" ? "justify-end" : "justify-start"
+                    }`}
+                  >
+                    <div
+                      className={`px-4 py-2 rounded-2xl max-w-[75%] text-sm ${
+                        msg.role === "user"
+                          ? "bg-blue-600 text-white"
+                          : "bg-richblack-700 text-gray-100"
+                      }`}
+                    >
+                      {msg.content}
+                    </div>
+                  </div>
+                ))}
+                {botTyping && (
+                  <div className="text-gray-400 text-sm animate-pulse">
+                    HappenBot is typing...
+                  </div>
+                )}
+              </div>
+
+              {/* Chat Input */}
+              <div className="flex border-t border-richblack-700 p-3">
+                <input
+                  type="text"
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleSend()}
+                  placeholder="Ask about this event..."
+                  className="flex-1 bg-transparent outline-none text-white text-sm px-2"
+                />
+                <button
+                  onClick={handleSend}
+                  disabled={botTyping}
+                  className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg text-white text-sm font-semibold disabled:opacity-50"
+                >
+                  Send
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </motion.div>
     </div>
   );

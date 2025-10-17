@@ -4,6 +4,7 @@ import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 import { useDispatch, useSelector } from "react-redux";
 import { loginUser, clearError } from "../redux/slices/auth.slice";
 import { useNavigate } from "react-router-dom";
+import toast, { Toaster } from "react-hot-toast";
 
 const LoginPage = () => {
   const dispatch = useDispatch();
@@ -38,6 +39,7 @@ const LoginPage = () => {
 
     const result = await dispatch(loginUser(formData));
     if (loginUser.fulfilled.match(result)) {
+      toast.success("Login successful! Welcome back!");
       navigate("/dashboard");
     }
   };
@@ -48,6 +50,7 @@ const LoginPage = () => {
 
   return (
     <div className="w-full mx-auto min-h-screen bg-richblack-900 text-white py-12 px-4 md:px-16">
+      <Toaster position="top-right" />
       {/* Unified Heading */}
       <div className="text-center mb-12">
         <h2 className="text-4xl md:text-5xl font-bold text-white animate-fadeIn">

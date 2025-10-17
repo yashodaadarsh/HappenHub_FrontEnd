@@ -10,6 +10,7 @@ import {
   resetSignup,
 } from "../redux/slices/signup.slice";
 import { useNavigate } from "react-router-dom";
+import toast, { Toaster } from "react-hot-toast";
 
 // Import modular components
 import ProgressBar from "../components/Signup/ProgressBar";
@@ -95,6 +96,7 @@ const SignupPage = () => {
     try {
       const result = await dispatch(signupUser(signupData));
       if (signupUser.fulfilled.match(result)) {
+        toast.success("Account created successfully! Welcome to HappenHub!");
         dispatch(resetSignup());
         navigate("/dashboard");
       }
@@ -126,6 +128,7 @@ const SignupPage = () => {
 
   return (
     <div className="w-full mx-auto min-h-screen bg-richblack-900 text-white py-12 px-4 md:px-16">
+      <Toaster position="top-right" />
       {/* Unified Heading */}
       <div className="text-center mb-8">
         <h2 className="text-4xl md:text-5xl font-bold text-white animate-fadeIn">
