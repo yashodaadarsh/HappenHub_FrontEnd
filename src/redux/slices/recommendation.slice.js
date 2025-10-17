@@ -4,14 +4,18 @@ import { GET_PERSONALIZED_FEED } from "../../api/apis";
 
 export const fetchPersonalizedFeed = createAsyncThunk(
   "recommendation/fetchPersonalizedFeed",
-  async (_, { rejectWithValue, getState }) => {
+  async ({ page = 0, size = 10 }, { rejectWithValue, getState }) => {
     try {
       const { auth } = getState();
 
-      console.log("Fetching personalized feed for email:", auth.user?.email);
+      console.log("Fetching personalized feed for email:", auth.user?.email, "page:", page, "size:", size);
       const response = await axios.get(GET_PERSONALIZED_FEED, {
         headers: {
-          "X-email": auth.user.email,
+          "X-email": auth.user?.email || auth.userDetails?.email,
+        },
+        params: {
+          page,
+          size,
         },
       });
 
@@ -28,6 +32,9 @@ const initialState = {
   events: [],
   loading: false,
   error: null,
+  currentPage: 0,
+  totalPages: 1,
+  pageSize: 10,
 };
 
 export const recommendationSlice = createSlice({
@@ -40,6 +47,12 @@ export const recommendationSlice = createSlice({
     setEvents: (state, action) => {
       state.events = action.payload;
     },
+    setCurrentPage: (state, action) => {
+      state.currentPage = action.payload;
+    },
+    setPageSize: (state, action) => {
+      state.pageSize = action.payload;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -50,6 +63,9 @@ export const recommendationSlice = createSlice({
       .addCase(fetchPersonalizedFeed.fulfilled, (state, action) => {
         state.loading = false;
         state.events = action.payload;
+        // Assuming we have 10 pages for demo purposes, you can adjust this based on API response
+        // In a real implementation, the API should return totalPages or totalElements
+        state.totalPages = 10;
       })
       .addCase(fetchPersonalizedFeed.rejected, (state, action) => {
         state.loading = false;
@@ -58,6 +74,6 @@ export const recommendationSlice = createSlice({
   },
 });
 
-export const { clearError , setEvents } = recommendationSlice.actions;
+export const { clearError, setEvents, setCurrentPage, setPageSize } = recommendationSlice.actions;
 
 export default recommendationSlice.reducer;

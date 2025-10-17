@@ -2,17 +2,16 @@ import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { motion } from "framer-motion";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
-import {  setEvents } from "../redux/slices/recommendation.slice";
+import { setEvents, setCurrentPage } from "../redux/slices/recommendation.slice";
+import { fetchPersonalizedFeed } from "../redux/slices/auth.slice";
 import EventCard from "../components/EventCard";
 import { FaHome, FaHeart, FaCog, FaBars, FaTimes } from "react-icons/fa";
-import { GET_PERSONALIZED_FEED } from "../api/apis";
-import axios from "axios";
 
 const Dashboard = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
-  const { events, loading, error } = useSelector((state) => state.recommendation);
+  const { events, loading, error, currentPage, totalPages } = useSelector((state) => state.recommendation);
   const { authLoading } = useSelector((state) => state.auth);
   const { isLoggedIn, user, userDetails } = useSelector((state) => state.auth);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -55,6 +54,12 @@ const Dashboard = () => {
   const handleNavigation = (path) => {
     navigate(path);
     setSidebarOpen(false);
+  };
+
+  const handlePageChange = (page) => {
+    if (page < 0) return;
+    dispatch(setCurrentPage(page));
+    dispatch(fetchPersonalizedFeed({ page, size: 10 }));
   };
 
   return (
@@ -134,6 +139,65 @@ const Dashboard = () => {
                   <EventCard key={event.event_id} event={event} index={index} />
                 ))}
               </div>
+
+              {/* Pagination */}
+              {events.length > 0 && (
+                <div className="flex justify-center mt-12">
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handlePageChange(currentPage - 1)}
+                      disabled={currentPage === 0}
+                      className="px-4 py-2 bg-richblack-800 border border-richblack-700 rounded-lg text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-richblack-700 transition-colors"
+                    >
+                      Previous
+                    </button>
+
+                    {/* Page Numbers */}
+                    {Array.from({ length: totalPages }, (_, i) => {
+                      const pageNumber = i;
+                      const isActive = pageNumber === currentPage;
+                      const isNearCurrent = Math.abs(pageNumber - currentPage) <= 2;
+                      const isFirstOrLast = pageNumber === 0 || pageNumber === totalPages - 1;
+
+                      // Show first page, last page, current page, and pages near current
+                      if (isFirstOrLast || isNearCurrent) {
+                        return (
+                          <button
+                            key={pageNumber}
+                            onClick={() => handlePageChange(pageNumber)}
+                            className={`px-4 py-2 border rounded-lg transition-colors ${
+                              isActive
+                                ? "bg-blue-600 border-blue-600 text-white"
+                                : "bg-richblack-800 border-richblack-700 text-white hover:bg-richblack-700"
+                            }`}
+                          >
+                            {pageNumber + 1}
+                          </button>
+                        );
+                      }
+
+                      // Show ellipsis for gaps
+                      if (pageNumber === currentPage - 3 || pageNumber === currentPage + 3) {
+                        return (
+                          <span key={pageNumber} className="px-2 py-2 text-richblack-400">
+                            ...
+                          </span>
+                        );
+                      }
+
+                      return null;
+                    })}
+
+                    <button
+                      onClick={() => handlePageChange(currentPage + 1)}
+                      disabled={currentPage === totalPages - 1}
+                      className="px-4 py-2 bg-richblack-800 border border-richblack-700 rounded-lg text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-richblack-700 transition-colors"
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              )}
 
               {events.length === 0 && (
                 <div className="text-center text-richblack-300 mt-12">

@@ -199,29 +199,34 @@ export const initializeAuth = () => (dispatch) => {
   }
 };
 
-export const initializeAuthAndFetchFeed = () => (dispatch) => {
+export const initializeAuthAndFetchFeed = () => (dispatch, getState) => {
   const token = localStorage.getItem("authToken");
   if (token) {
     // Set token in state and fetch profile
     dispatch({ type: 'auth/setToken', payload: token });
     dispatch(fetchProfile()).then(() => {
       // Fetch personalized feed after profile is loaded
-      dispatch(fetchPersonalizedFeed());
+      const { recommendation } = getState();
+      dispatch(fetchPersonalizedFeed({ page: recommendation.currentPage, size: recommendation.pageSize }));
     });
   }
 };
 
 export const fetchPersonalizedFeed = createAsyncThunk(
   "recommendation/fetchPersonalizedFeed",
-  async (_, { rejectWithValue, getState }) => {
+  async ({ page = 0, size = 10 }, { rejectWithValue, getState }) => {
     try {
       const { auth } = getState();
 
-      console.log("Fetching personalized feed for email:", auth.user?.email);
+      console.log("Fetching personalized feed for email:", auth.user?.email, "page:", page, "size:", size);
       console.log("Auth user object:", auth.user);
       const response = await axios.get(GET_PERSONALIZED_FEED, {
         headers: {
           "X-email": auth.user?.email || auth.userDetails?.email,
+        },
+        params: {
+          page,
+          size,
         },
       });
 
