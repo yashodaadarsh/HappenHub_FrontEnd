@@ -1,17 +1,21 @@
 import React, { useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
+import { logout } from "../../redux/slices/auth.slice";
 import useOutsideClick from "../../hooks/useOutsideClick";
 
 const ProfileDropdown = () => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
   const { user } = useSelector((state) => state.auth);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   useOutsideClick(dropdownRef, () => setIsOpen(false));
 
   const handleLogout = () => {
-    console.log("Logging out...");
+    dispatch(logout());
+    navigate("/login");
   };
 
   return (

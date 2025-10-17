@@ -25,7 +25,7 @@ const HeroCTA = () => {
       {/* Primary CTA */}
       <motion.div variants={floatingAnimation} animate="float">
         <Link
-          to="/events"
+          to="/explore"
           className="flex items-center gap-2 px-6 py-3 rounded-full bg-gradient-to-r from-yellow-50 to-pink-200 text-richblack-900 font-bold text-lg shadow-lg hover:scale-105 hover:shadow-pink-200/40 transition-all"
         >
           <FaCalendarAlt /> Explore Events

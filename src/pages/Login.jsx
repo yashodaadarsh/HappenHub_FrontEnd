@@ -1,22 +1,45 @@
 import React, { useState } from "react";
 import { FcGoogle } from "react-icons/fc";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
+import { useDispatch, useSelector } from "react-redux";
+import { loginUser, clearError } from "../redux/slices/auth.slice";
+import { useNavigate } from "react-router-dom";
 
 const LoginPage = () => {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const { authLoading, error, isLoggedIn } = useSelector((state) => state.auth);
+
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
 
+  React.useEffect(() => {
+    if (isLoggedIn) {
+      navigate("/dashboard");
+    }
+  }, [isLoggedIn, navigate]);
+
+  React.useEffect(() => {
+    return () => {
+      dispatch(clearError());
+    };
+  }, [dispatch]);
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    console.log("Login Data:", formData);
+
+    const result = await dispatch(loginUser(formData));
+    if (loginUser.fulfilled.match(result)) {
+      navigate("/dashboard");
+    }
   };
 
   const handleGoogleLogin = () => {
@@ -52,6 +75,7 @@ const LoginPage = () => {
                 name="email"
                 placeholder="your@email.com"
                 onChange={handleInputChange}
+                value={formData.email}
                 className="w-full bg-transparent px-6 py-5 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-300 focus:border-yellow-300 border border-richblack-600 transition-all duration-300 transform hover:scale-[1.02]"
                 required
               />
@@ -67,6 +91,7 @@ const LoginPage = () => {
                 name="password"
                 placeholder="Enter your password"
                 onChange={handleInputChange}
+                value={formData.password}
                 className="w-full bg-transparent px-6 py-5 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-300 focus:border-yellow-300 border border-richblack-600 pr-14 transition-all duration-300 transform hover:scale-[1.02]"
                 required
               />
@@ -81,13 +106,20 @@ const LoginPage = () => {
             {/* Submit Button */}
             <button
               type="submit"
-              className="w-full py-5 rounded-lg font-semibold text-richblack-900 transition-all duration-300 transform hover:scale-105 cursor-pointer"
+              disabled={authLoading}
+              className="w-full py-5 rounded-lg font-semibold text-richblack-900 transition-all duration-300 transform hover:scale-105 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               style={{
                 background: "linear-gradient(to right, #fffad1, #fff6c2)",
               }}
             >
-              Log In
+              {authLoading ? "Logging In..." : "Log In"}
             </button>
+
+            {error && (
+              <div className="text-red-400 text-sm text-center mt-2">
+                {error}
+              </div>
+            )}
 
             {/* OR Divider */}
             <div className="flex items-center my-4">
