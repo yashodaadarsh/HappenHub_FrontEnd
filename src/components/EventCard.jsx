@@ -12,7 +12,7 @@ const EventCard = ({ event, index }) => {
   const { isLoggedIn, user, userDetails } = useSelector((state) => state.auth);
   const { wishlistEventIds, loading } = useSelector((state) => state.wishlist);
 
-  const isWishlisted = wishlistEventIds.includes(event.event_id);
+  const isWishlisted = Array.isArray(wishlistEventIds) && wishlistEventIds.includes(event.event_id);
 
   // Calculate date-related styling
   const now = new Date();

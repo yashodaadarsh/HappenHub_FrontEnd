@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { setEvents, setCurrentPage } from "../redux/slices/recommendation.slice";
 import { fetchPersonalizedFeed } from "../redux/slices/auth.slice";
+import { fetchWishlistEvents } from "../redux/slices/wishlist.slice";
 import EventCard from "../components/EventCard";
 import { FaHome, FaHeart, FaCog, FaBars, FaTimes } from "react-icons/fa";
 
@@ -15,12 +16,18 @@ const Dashboard = () => {
   const { authLoading } = useSelector((state) => state.auth);
   const { isLoggedIn, user, userDetails } = useSelector((state) => state.auth);
 
-  // Fetch personalized events when user details are available
+  // Fetch personalized events and wishlist when user details are available
   React.useEffect(() => {
     if (isLoggedIn && userDetails && events.length === 0 && !loading) {
       dispatch(fetchPersonalizedFeed({ page: currentPage, size: 10 }));
+
+      // Also fetch wishlist to ensure icons are correct
+      const email = user?.email || userDetails?.email;
+      if (email) {
+        dispatch(fetchWishlistEvents(email));
+      }
     }
-  }, [isLoggedIn, userDetails, events.length, loading, currentPage, dispatch]);
+  }, [isLoggedIn, userDetails, events.length, loading, currentPage, dispatch, user, userDetails]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Remove the useEffect from Dashboard since we're now fetching in initializeAuthAndFetchFeed

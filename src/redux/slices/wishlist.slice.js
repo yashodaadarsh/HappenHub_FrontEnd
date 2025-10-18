@@ -10,6 +10,7 @@ export const addToWishlist = createAsyncThunk(
       const response = await axios.post(ADD_TO_WISHLIST(eventId), {}, {
         headers: { "X-email": userEmail },
       });
+      console.log(response)
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || "Failed to add to wishlist");
@@ -94,6 +95,8 @@ export const wishlistSlice = createSlice({
         if (!state.wishlistEventIds.includes(eventId)) {
           state.wishlistEventIds.push(eventId);
         }
+        // Show success toast
+        // Note: Toast is handled in the component, not here
       })
       .addCase(addToWishlist.rejected, (state, action) => {
         state.loading = false;
@@ -112,6 +115,8 @@ export const wishlistSlice = createSlice({
         state.wishlistEventIds = state.wishlistEventIds.filter(id => id !== eventId);
         // Also remove from the full events list
         state.wishlistEvents = state.wishlistEvents.filter(event => event.event_id !== eventId);
+        // Show success toast
+        // Note: Toast is handled in the component, not here
       })
       .addCase(removeFromWishlist.rejected, (state, action) => {
         state.loading = false;
@@ -125,9 +130,9 @@ export const wishlistSlice = createSlice({
       })
       .addCase(fetchWishlistEvents.fulfilled, (state, action) => {
         state.loading = false;
-        state.wishlistEvents = action.payload;
+        state.wishlistEvents = action.payload || [];
         // Update the array of wishlisted event IDs for quick lookup
-        state.wishlistEventIds = action.payload.map(event => event.event_id);
+        state.wishlistEventIds = (action.payload || []).map(event => event.event_id);
       })
       .addCase(fetchWishlistEvents.rejected, (state, action) => {
         state.loading = false;
