@@ -14,6 +14,13 @@ const Dashboard = () => {
   const { events, loading, error, currentPage, totalPages } = useSelector((state) => state.recommendation);
   const { authLoading } = useSelector((state) => state.auth);
   const { isLoggedIn, user, userDetails } = useSelector((state) => state.auth);
+
+  // Fetch personalized events when user details are available
+  React.useEffect(() => {
+    if (isLoggedIn && userDetails && events.length === 0 && !loading) {
+      dispatch(fetchPersonalizedFeed({ page: currentPage, size: 10 }));
+    }
+  }, [isLoggedIn, userDetails, events.length, loading, currentPage, dispatch]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Remove the useEffect from Dashboard since we're now fetching in initializeAuthAndFetchFeed
@@ -22,6 +29,17 @@ const Dashboard = () => {
   const isMainDashboard = location.pathname === "/dashboard";
 
   if ((loading || authLoading) && isMainDashboard) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-richblack-900 text-white">
+        <div className="text-xl">Loading your personalized events...</div>
+      </div>
+    );
+  }
+
+  // Show loading if we have a token but no user details yet (during app initialization)
+  // OR if we're logged in but don't have user details (during login redirect)
+  if ((!userDetails && localStorage.getItem("authToken") && isMainDashboard) ||
+      (isLoggedIn && !userDetails && isMainDashboard)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-richblack-900 text-white">
         <div className="text-xl">Loading your personalized events...</div>

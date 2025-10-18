@@ -4,15 +4,24 @@ import { useDispatch, useSelector } from "react-redux";
 import { motion } from "framer-motion";
 import { FaHeart, FaRegHeart } from "react-icons/fa";
 import { addToWishlist, removeFromWishlist } from "../redux/slices/wishlist.slice";
-import toast, { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
 
 const EventCard = ({ event, index }) => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { isLoggedIn, user } = useSelector((state) => state.auth);
+  const { isLoggedIn, user, userDetails } = useSelector((state) => state.auth);
   const { wishlistEventIds, loading } = useSelector((state) => state.wishlist);
 
   const isWishlisted = wishlistEventIds.includes(event.event_id);
+
+  // Calculate date-related styling
+  const now = new Date();
+  const startDate = new Date(event.start_date);
+  const endDate = new Date(event.end_date);
+  const twoDaysFromNow = new Date(now.getTime() + (2 * 24 * 60 * 60 * 1000));
+
+  const isEndingSoon = endDate <= now && endDate >= new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000)); // Ended within last 7 days
+  const isStartingSoon = startDate >= now && startDate <= twoDaysFromNow; // Starting within next 2 days
 
   const handleViewDetails = () => {
     navigate(`/events/${event.event_id}`, { state: { event } });
@@ -21,16 +30,22 @@ const EventCard = ({ event, index }) => {
   const handleWishlistToggle = async (e) => {
     e.stopPropagation(); // Prevent triggering the card click
 
-    if (!isLoggedIn || !user) {
+    if (!isLoggedIn) {
       toast.error("Please log in to add events to your wishlist!");
       return;
     }
 
+    const email = user?.email || userDetails?.email;
+    if (!email) {
+      toast.error("Unable to identify user. Please try logging in again.");
+      return;
+    }
+
     if (isWishlisted) {
-      dispatch(removeFromWishlist({ eventId: event.event_id, userEmail: user.email }));
+      dispatch(removeFromWishlist({ eventId: event.event_id, userEmail: email }));
       toast.success("Removed from wishlist!");
     } else {
-      dispatch(addToWishlist({ eventId: event.event_id, userEmail: user.email }));
+      dispatch(addToWishlist({ eventId: event.event_id, userEmail: email }));
       toast.success("Added to wishlist!");
     }
   };
@@ -41,9 +56,14 @@ const EventCard = ({ event, index }) => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.1 }}
-      className="bg-richblack-800 rounded-lg p-6 shadow-lg border border-richblack-700 hover:border-blue-400 transition-all hover:scale-105"
+      className={`bg-richblack-800 rounded-lg p-6 shadow-lg border transition-all hover:scale-105 ${
+        isEndingSoon
+          ? "border-red-500 bg-red-900/20"
+          : isStartingSoon
+          ? "border-yellow-500 bg-yellow-900/20"
+          : "border-richblack-700 hover:border-blue-400"
+      }`}
     >
-      <Toaster position="top-right" />
       {event.image_url && (
         <div className="mb-4">
           <img
@@ -70,11 +90,13 @@ const EventCard = ({ event, index }) => {
         {event.description}
       </p>
 
-      <div className="flex justify-between items-center text-sm text-richblack-300">
-        <span>
+      <div className="flex justify-between items-center text-sm">
+        <span className={isStartingSoon ? "text-yellow-400 font-semibold" : "text-richblack-300"}>
           Start: {new Date(event.start_date).toLocaleDateString()}
         </span>
-        <span>End: {new Date(event.end_date).toLocaleDateString()}</span>
+        <span className={isEndingSoon ? "text-red-400 font-semibold" : "text-richblack-300"}>
+          End: {new Date(event.end_date).toLocaleDateString()}
+        </span>
       </div>
 
       <div className="flex justify-between items-center mt-4">
@@ -95,7 +117,11 @@ const EventCard = ({ event, index }) => {
                 : "text-gray-400 hover:text-red-500"
             } ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
           >
-            {isWishlisted ? <FaHeart size={20} className="text-red-500" /> : <FaRegHeart size={20} />}
+            {isWishlisted ? (
+              <FaHeart size={20} className="text-red-500 fill-current" />
+            ) : (
+              <FaRegHeart size={20} />
+            )}
           </button>
         )}
       </div>

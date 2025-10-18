@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 import { SIGNUP, LOGIN, PING_AUTH, GET_PROFILE, UPDATE_PROFILE, GET_PERSONALIZED_FEED } from "../../api/apis";
+import { fetchWishlistEvents } from "./wishlist.slice";
 
 export const signupUser = createAsyncThunk(
   "auth/signupUser",
@@ -167,6 +168,7 @@ export const authSlice = createSlice({
         state.isLoggedIn = true;
         console.log("Fetched profile payload  :", action.payload);
         state.userDetails = action.payload;
+        // After profile is loaded, the dashboard component will handle fetching personalized feed
       })
       .addCase(fetchProfile.rejected, (state, action) => {
         state.authLoading = false;
@@ -205,9 +207,16 @@ export const initializeAuthAndFetchFeed = () => (dispatch, getState) => {
     // Set token in state and fetch profile
     dispatch({ type: 'auth/setToken', payload: token });
     dispatch(fetchProfile()).then(() => {
-      // Fetch personalized feed after profile is loaded
+      // Fetch personalized feed and wishlist after profile is loaded
       const { recommendation } = getState();
       dispatch(fetchPersonalizedFeed({ page: recommendation.currentPage, size: recommendation.pageSize }));
+
+      // Also fetch wishlist to ensure wishlist icons are correct
+      const { auth } = getState();
+      const email = auth.user?.email || auth.userDetails?.email;
+      if (email) {
+        dispatch(fetchWishlistEvents(email));
+      }
     });
   }
 };

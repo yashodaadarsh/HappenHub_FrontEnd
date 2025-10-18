@@ -1,5 +1,6 @@
 import React from "react";
 import { Route, Routes } from "react-router-dom";
+import { Toaster } from "react-hot-toast";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import SignUp from "./pages/SignUp";
@@ -16,6 +17,7 @@ import Wishlist from "./pages/Dashboard/Wishlist";
 const App = () => {
   return (
     <div className="max-w-7xl mx-auto">
+      <Toaster position="top-right" />
       <Navbar />
 
       <Routes>

@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { FcGoogle } from "react-icons/fc";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 import { useDispatch, useSelector } from "react-redux";
-import { loginUser, clearError } from "../redux/slices/auth.slice";
+import { loginUser, clearError, fetchProfile } from "../redux/slices/auth.slice";
 import { useNavigate } from "react-router-dom";
 import toast, { Toaster } from "react-hot-toast";
 
@@ -40,7 +40,8 @@ const LoginPage = () => {
     const result = await dispatch(loginUser(formData));
     if (loginUser.fulfilled.match(result)) {
       toast.success("Login successful! Welcome back!");
-      navigate("/dashboard");
+      // Fetch profile after successful login
+      dispatch(fetchProfile());
     }
   };
 

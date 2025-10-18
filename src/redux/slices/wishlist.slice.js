@@ -35,10 +35,17 @@ export const removeFromWishlist = createAsyncThunk(
 // Async thunk for fetching wishlist events
 export const fetchWishlistEvents = createAsyncThunk(
   "wishlist/fetchWishlistEvents",
-  async (userEmail, { rejectWithValue }) => {
+  async (userEmail, { rejectWithValue, getState }) => {
     try {
+      const { auth } = getState();
+      const email = userEmail || auth.user?.email || auth.userDetails?.email;
+
+      if (!email) {
+        return rejectWithValue("No user email available");
+      }
+
       const response = await axios.get(GET_WISHLIST_EVENTS, {
-        headers: { "X-email": userEmail },
+        headers: { "X-email": email },
       });
 
       console.log("wishlest response : "  , response);
@@ -67,6 +74,10 @@ export const wishlistSlice = createSlice({
       state.wishlistEvents = [];
       state.wishlistEventIds = [];
       state.error = null;
+    },
+    initializeWishlist: (state, action) => {
+      // Initialize wishlist state from localStorage or server data
+      state.wishlistEventIds = action.payload || [];
     },
   },
   extraReducers: (builder) => {
@@ -99,6 +110,8 @@ export const wishlistSlice = createSlice({
         // Remove the event ID from the wishlist array
         const eventId = action.meta.arg.eventId;
         state.wishlistEventIds = state.wishlistEventIds.filter(id => id !== eventId);
+        // Also remove from the full events list
+        state.wishlistEvents = state.wishlistEvents.filter(event => event.event_id !== eventId);
       })
       .addCase(removeFromWishlist.rejected, (state, action) => {
         state.loading = false;
@@ -123,6 +136,6 @@ export const wishlistSlice = createSlice({
   },
 });
 
-export const { clearError, clearWishlist } = wishlistSlice.actions;
+export const { clearError, clearWishlist, initializeWishlist } = wishlistSlice.actions;
 
 export default wishlistSlice.reducer;

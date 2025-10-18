@@ -58,7 +58,7 @@ const WhyHappenHub = () => {
   return (
     <section
       ref={sectionRef}
-      className="relative min-h-[450vh] bg-gradient-to-b from-richblue-900 to-richblack-900"
+      className="relative min-h-[450vh] "
     >
       <div className="sticky top-0 h-screen flex items-center justify-center">
         <motion.div
@@ -86,7 +86,7 @@ const WhyHappenHub = () => {
                     key="why"
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="text-3xl md:text-6xl font-extrabold bg-gradient-to-r from-pink-200 via-blue-100 to-yellow-50 bg-clip-text text-transparent"
+                    className="text-3xl md:text-6xl font-extrabold bg-gradient-to-r from-caribbeangreen-100 via-blue-200 to-richblue-200 bg-clip-text text-transparent"
                   >
                     Why HappenHub?
                   </motion.h2>
@@ -97,7 +97,7 @@ const WhyHappenHub = () => {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3 }}
                   >
-                    <h3 className="text-2xl md:text-6xl font-bold bg-gradient-to-r from-pink-200 via-blue-100 to-yellow-50 bg-clip-text text-transparent">
+                    <h3 className="text-2xl md:text-6xl font-bold bg-gradient-to-r from-caribbeangreen-100 via-blue-200 to-richblue-200 bg-clip-text text-transparent">
                       {features[activeIndex].title}
                     </h3>
                     <TypingText text={features[activeIndex].description} />

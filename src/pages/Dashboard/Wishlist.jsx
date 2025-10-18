@@ -7,17 +7,18 @@ import EventCard from "../../components/EventCard";
 const Wishlist = () => {
   const dispatch = useDispatch();
   const { wishlistEvents, loading, error } = useSelector((state) => state.wishlist);
-  const { user } = useSelector((state) => state.auth);
+  const { user, userDetails } = useSelector((state) => state.auth);
 
   useEffect(() => {
-    if (user?.email) {
-      dispatch(fetchWishlistEvents(user.email));
+    if (user?.email || userDetails?.email) {
+      dispatch(fetchWishlistEvents(user?.email || userDetails?.email));
     }
-  }, [dispatch, user]);
+  }, [dispatch, user, userDetails]);
 
   const handleRemoveFromWishlist = (eventId) => {
-    if (user?.email) {
-      dispatch(removeFromWishlist({ eventId, userEmail: user.email }));
+    const email = user?.email || userDetails?.email;
+    if (email) {
+      dispatch(removeFromWishlist({ eventId, userEmail: email }));
     }
   };
 

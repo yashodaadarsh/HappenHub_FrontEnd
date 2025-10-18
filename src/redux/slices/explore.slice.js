@@ -25,7 +25,7 @@ export const checkAuthStatus = createAsyncThunk(
 // Async thunk for fetching events with pagination, search, filters, and sorting
 export const fetchEvents = createAsyncThunk(
   "explore/fetchEvents",
-  async ({ page = 0, size = 10, search = "", filterType = "", sortBy = "" }, { rejectWithValue }) => {
+  async ({ page = 0, size = 12, search = "", filterType = "", sortBy = "" }, { rejectWithValue }) => {
     try {
       // For explore page, use search service
       if (search) {

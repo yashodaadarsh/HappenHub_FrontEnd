@@ -26,7 +26,7 @@ const HeroCTA = () => {
       <motion.div variants={floatingAnimation} animate="float">
         <Link
           to="/explore"
-          className="flex items-center gap-2 px-6 py-3 rounded-full bg-gradient-to-r from-yellow-50 to-pink-200 text-richblack-900 font-bold text-lg shadow-lg hover:scale-105 hover:shadow-pink-200/40 transition-all"
+          className="flex items-center gap-2 px-6 py-3 rounded-full bg-gradient-to-r from-caribbeangreen-200 to-blue-300 text-richblack-900 font-bold text-lg shadow-lg hover:scale-105 hover:shadow-caribbeangreen-200/40 transition-all"
         >
           <FaCalendarAlt /> Explore Events
         </Link>
@@ -36,7 +36,7 @@ const HeroCTA = () => {
       <motion.div variants={floatingAnimation} animate="float">
         <Link
           to="/create-event"
-          className="flex items-center gap-2 px-6 py-3 rounded-full border border-yellow-50 text-yellow-50 font-bold text-lg hover:bg-yellow-50 hover:text-richblack-900 transition-all hover:scale-105"
+          className="flex items-center gap-2 px-6 py-3 rounded-full border border-richblue-200 text-richblue-200 font-bold text-lg hover:bg-richblue-200 hover:text-richblack-900 transition-all hover:scale-105"
         >
           <FaPlus /> Create Event
         </Link>

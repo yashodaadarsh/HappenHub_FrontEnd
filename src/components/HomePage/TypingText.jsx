@@ -28,7 +28,7 @@ const TypingText = ({ text }) => {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="font-mono text-base md:text-xl text-yellow-50 drop-shadow-lg mt-2"
+      className="font-mono text-base md:text-xl text-richblack-50 drop-shadow-lg mt-2"
     >
       {displayed ? displayed : ""}
       {displayed.length < text.length && (
