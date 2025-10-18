@@ -69,13 +69,7 @@ const Wishlist = () => {
             {wishlistEvents.map((event, index) => (
               <div key={event.event_id} className="relative">
                 <EventCard event={event} index={index} />
-                <button
-                  onClick={() => handleRemoveFromWishlist(event.event_id)}
-                  className="absolute top-2 right-2 bg-red-600 hover:bg-red-700 text-white p-2 rounded-full shadow-lg transition-colors"
-                  title="Remove from wishlist"
-                >
-                  ×
-                </button>
+                
               </div>
             ))}
           </div>
