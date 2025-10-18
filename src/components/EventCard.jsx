@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { motion } from "framer-motion";
@@ -10,7 +10,10 @@ const EventCard = ({ event, index }) => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { isLoggedIn, user, userDetails } = useSelector((state) => state.auth);
-  const { wishlistEventIds, loading } = useSelector((state) => state.wishlist);
+  const { wishlistEventIds } = useSelector((state) => state.wishlist);
+
+  // Local loading state per event
+  const [processing, setProcessing] = useState(false);
 
   const isWishlisted = Array.isArray(wishlistEventIds) && wishlistEventIds.includes(event.event_id);
 
@@ -18,9 +21,10 @@ const EventCard = ({ event, index }) => {
   const now = new Date();
   const startDate = new Date(event.start_date);
   const endDate = new Date(event.end_date);
-  const twoDaysFromNow = new Date(now.getTime() + (2 * 24 * 60 * 60 * 1000));
+  const twoDaysFromNow = new Date(now.getTime() + 2 * 24 * 60 * 60 * 1000);
 
-  const isEndingSoon = endDate <= now && endDate >= new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000)); // Ended within last 7 days
+  const isEndingSoon =
+    endDate <= now && endDate >= new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000); // Ended within last 7 days
   const isStartingSoon = startDate >= now && startDate <= twoDaysFromNow; // Starting within next 2 days
 
   const handleViewDetails = () => {
@@ -28,7 +32,7 @@ const EventCard = ({ event, index }) => {
   };
 
   const handleWishlistToggle = async (e) => {
-    e.stopPropagation(); // Prevent triggering the card click
+    e.stopPropagation();
 
     if (!isLoggedIn) {
       toast.error("Please log in to add events to your wishlist!");
@@ -41,12 +45,19 @@ const EventCard = ({ event, index }) => {
       return;
     }
 
-    if (isWishlisted) {
-      dispatch(removeFromWishlist({ eventId: event.event_id, userEmail: email }));
-      toast.success("Removed from wishlist!");
-    } else {
-      dispatch(addToWishlist({ eventId: event.event_id, userEmail: email }));
-      toast.success("Added to wishlist!");
+    setProcessing(true);
+    try {
+      if (isWishlisted) {
+        await dispatch(removeFromWishlist({ eventId: event.event_id, userEmail: email })).unwrap();
+        toast.success("Removed from wishlist!");
+      } else {
+        await dispatch(addToWishlist({ eventId: event.event_id, userEmail: email })).unwrap();
+        toast.success("Added to wishlist!");
+      }
+    } catch (err) {
+      toast.error("Something went wrong. Please try again!");
+    } finally {
+      setProcessing(false);
     }
   };
 
@@ -75,20 +86,14 @@ const EventCard = ({ event, index }) => {
       )}
 
       <div className="mb-4">
-        <h3 className="text-xl font-bold text-yellow-50 mb-2">
-          {event.title}
-        </h3>
+        <h3 className="text-xl font-bold text-yellow-50 mb-2">{event.title}</h3>
         <p className="text-richblack-200 text-sm mb-2">
           {event.type} • {event.location}
         </p>
-        <p className="text-caribbeangreen-200 font-semibold">
-          {event.salary}
-        </p>
+        <p className="text-caribbeangreen-200 font-semibold">{event.salary}</p>
       </div>
 
-      <p className="text-richblack-100 text-sm mb-4 line-clamp-3">
-        {event.description}
-      </p>
+      <p className="text-richblack-100 text-sm mb-4 line-clamp-3">{event.description}</p>
 
       <div className="flex justify-between items-center text-sm">
         <span className={isStartingSoon ? "text-yellow-400 font-semibold" : "text-richblack-300"}>
@@ -110,12 +115,10 @@ const EventCard = ({ event, index }) => {
         {isLoggedIn && (
           <button
             onClick={handleWishlistToggle}
-            disabled={loading}
+            disabled={processing}
             className={`p-2 rounded-lg transition-all ${
-              isWishlisted
-                ? "text-red-500 hover:text-red-400"
-                : "text-gray-400 hover:text-red-500"
-            } ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
+              isWishlisted ? "text-red-500 hover:text-red-400" : "text-gray-400 hover:text-red-500"
+            } ${processing ? "opacity-50 cursor-not-allowed" : ""}`}
           >
             {isWishlisted ? (
               <FaHeart size={20} className="text-red-500 fill-current" />
