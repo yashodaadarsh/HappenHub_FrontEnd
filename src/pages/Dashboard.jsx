@@ -84,7 +84,7 @@ const Dashboard = () => {
   const handlePageChange = (page) => {
     if (page < 0) return;
     dispatch(setCurrentPage(page));
-    dispatch(fetchPersonalizedFeed({ page, size: 10 }));
+    dispatch(fetchPersonalizedFeed({ page, size: 12 }));
   };
 
   return (

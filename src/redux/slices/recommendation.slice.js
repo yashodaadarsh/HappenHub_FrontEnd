@@ -63,8 +63,8 @@ export const recommendationSlice = createSlice({
       .addCase(fetchPersonalizedFeed.fulfilled, (state, action) => {
         state.loading = false;
         state.events = action.payload.content || action.payload || [];
-        // Set total pages from response if available, otherwise default to 1
-        state.totalPages = action.payload.totalPages || action.payload.pageable?.pageSize ? Math.ceil((action.payload.totalElements || 0) / (action.payload.pageable?.pageSize || 10)) : 1;
+        // Assuming we have 10 pages for demo purposes, you can adjust this based on API response
+        state.totalPages = 10;
       })
       .addCase(fetchPersonalizedFeed.rejected, (state, action) => {
         state.loading = false;
