@@ -4,11 +4,11 @@ import { GET_PERSONALIZED_FEED } from "../../api/apis";
 
 export const fetchPersonalizedFeed = createAsyncThunk(
   "recommendation/fetchPersonalizedFeed",
-  async ({ page = 0, size = 10 }, { rejectWithValue, getState }) => {
+  async ({ page = 0, size = 12 }, { rejectWithValue, getState }) => {
     try {
       const { auth } = getState();
 
-      console.log("Fetching personalized feed for email:", auth.user?.email, "page:", page, "size:", size);
+      console.log("Recomandation slcie Fetching personalized feed for email:", auth.user?.email, "page:", page, "size:", size);
       const response = await axios.get(GET_PERSONALIZED_FEED, {
         headers: {
           "X-email": auth.user?.email || auth.userDetails?.email,
@@ -19,7 +19,7 @@ export const fetchPersonalizedFeed = createAsyncThunk(
         },
       });
 
-      console.log("Personalized feed response :", response);
+      console.log("Recomandation Personalized feed response :", response);
       return response.data;
     } catch (error) {
         console.log("Error fetching personalized feed:", error);

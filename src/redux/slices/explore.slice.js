@@ -45,9 +45,13 @@ export const fetchEvents = createAsyncThunk(
         if (params.toString()) url += `?${params.toString()}`;
 
         const response = await axios.get(url);
+        console.log("Fetched events:", response.data);
+
         return response.data;
+
       }
     } catch (error) {
+      console.error("Error fetching events:", error);
       return rejectWithValue(error.response?.data?.message || "Failed to fetch events");
     }
   }

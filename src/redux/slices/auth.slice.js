@@ -221,31 +221,31 @@ export const initializeAuthAndFetchFeed = () => (dispatch, getState) => {
   }
 };
 
-export const fetchPersonalizedFeed = createAsyncThunk(
-  "recommendation/fetchPersonalizedFeed",
-  async ({ page = 0, size = 10 }, { rejectWithValue, getState }) => {
-    try {
-      const { auth } = getState();
+// export const fetchPersonalizedFeed = createAsyncThunk(
+//   "recommendation/fetchPersonalizedFeed",
+//   async ({ page = 0, size = 12 }, { rejectWithValue, getState }) => {
+//     try {
+//       const { auth } = getState();
 
-      console.log("Fetching personalized feed for email:", auth.user?.email, "page:", page, "size:", size);
-      console.log("Auth user object:", auth.user);
-      const response = await axios.get(GET_PERSONALIZED_FEED, {
-        headers: {
-          "X-email": auth.user?.email || auth.userDetails?.email,
-        },
-        params: {
-          page,
-          size,
-        },
-      });
+//       console.log("Auth slice Fetching personalized feed for email:", auth.userDetails?.email, "page:", page, "size:", size);
+//       console.log("Auth user object:", auth.user);
+//       const response = await axios.get(GET_PERSONALIZED_FEED, {
+//         headers: {
+//           "X-email": auth.user?.email || auth.userDetails?.email,
+//         },
+//         params: {
+//           page,
+//           size,
+//         },
+//       });
 
-      console.log("Personalized feed response :", response);
-      return response.data;
-    } catch (error) {
-        console.log("Error fetching personalized feed:", error);
-      return rejectWithValue(error.response?.data?.message || "Failed to fetch personalized feed");
-    }
-  }
-);
+//       console.log("Auth slice Personalized feed response :", response);
+//       return response.data;
+//     } catch (error) {
+//         console.log("Error fetching personalized feed:", error);
+//       return rejectWithValue(error.response?.data?.message || "Failed to fetch personalized feed");
+//     }
+//   }
+// );
 
 export default authSlice.reducer;

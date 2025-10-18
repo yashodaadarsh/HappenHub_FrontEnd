@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { motion } from "framer-motion";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { setEvents, setCurrentPage } from "../redux/slices/recommendation.slice";
-import { fetchPersonalizedFeed } from "../redux/slices/auth.slice";
+import { fetchPersonalizedFeed } from "../redux/slices/recommendation.slice";
 import { fetchWishlistEvents } from "../redux/slices/wishlist.slice";
 import EventCard from "../components/EventCard";
 import { FaHome, FaHeart, FaCog, FaBars, FaTimes } from "react-icons/fa";
@@ -19,7 +19,7 @@ const Dashboard = () => {
   // Fetch personalized events and wishlist when user details are available
   React.useEffect(() => {
     if (isLoggedIn && userDetails && events.length === 0 && !loading) {
-      dispatch(fetchPersonalizedFeed({ page: currentPage, size: 10 }));
+      dispatch(fetchPersonalizedFeed({ page: currentPage, size: 12 }));
 
       // Also fetch wishlist to ensure icons are correct
       const email = user?.email || userDetails?.email;

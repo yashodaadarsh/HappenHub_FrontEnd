@@ -26,6 +26,7 @@ export const removeFromWishlist = createAsyncThunk(
       const response = await axios.patch(REMOVE_FROM_WISHLIST(eventId), {}, {
         headers: { "X-email": userEmail },
       });
+      console.log("Wishlist remove response : "  , response);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || "Failed to remove from wishlist");
