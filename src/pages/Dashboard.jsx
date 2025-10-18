@@ -18,7 +18,7 @@ const Dashboard = () => {
 
   // Fetch personalized events and wishlist when user details are available
   React.useEffect(() => {
-    if (isLoggedIn && userDetails && events.length === 0 && !loading) {
+    if (isLoggedIn && userDetails && events.length === 0 && !loading && currentPage >= 0 && currentPage < totalPages) {
       dispatch(fetchPersonalizedFeed({ page: currentPage, size: 12 }));
 
       // Also fetch wishlist to ensure icons are correct
@@ -27,7 +27,7 @@ const Dashboard = () => {
         dispatch(fetchWishlistEvents(email));
       }
     }
-  }, [isLoggedIn, userDetails, events.length, loading, currentPage, dispatch, user, userDetails]);
+  }, [isLoggedIn, userDetails, events.length, loading, currentPage, totalPages, dispatch, user, userDetails]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Remove the useEffect from Dashboard since we're now fetching in initializeAuthAndFetchFeed
@@ -35,7 +35,7 @@ const Dashboard = () => {
   // Check if we're on the main dashboard route (not nested)
   const isMainDashboard = location.pathname === "/dashboard";
 
-  if ((loading || authLoading) && isMainDashboard) {
+  if ((loading || authLoading) && isMainDashboard && isLoggedIn) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-richblack-900 text-white">
         <div className="text-xl">Loading your personalized events...</div>
@@ -45,8 +45,9 @@ const Dashboard = () => {
 
   // Show loading if we have a token but no user details yet (during app initialization)
   // OR if we're logged in but don't have user details (during login redirect)
-  if ((!userDetails && localStorage.getItem("authToken") && isMainDashboard) ||
-      (isLoggedIn && !userDetails && isMainDashboard)) {
+  // Only show loading if we're actually logged in or have a token
+  if (((!userDetails && localStorage.getItem("authToken") && isMainDashboard) ||
+      (isLoggedIn && !userDetails && isMainDashboard)) && isLoggedIn) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-richblack-900 text-white">
         <div className="text-xl">Loading your personalized events...</div>
@@ -82,7 +83,7 @@ const Dashboard = () => {
   };
 
   const handlePageChange = (page) => {
-    if (page < 0) return;
+    if (page < 0 || page >= totalPages) return;
     dispatch(setCurrentPage(page));
     dispatch(fetchPersonalizedFeed({ page, size: 12 }));
   };
@@ -249,3 +250,4 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
+
