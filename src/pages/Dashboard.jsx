@@ -1,80 +1,48 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { Outlet, useNavigate, useLocation, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Outlet, useNavigate, useLocation } from "react-router-dom";
-import { setEvents, setCurrentPage } from "../redux/slices/recommendation.slice";
-import { fetchPersonalizedFeed } from "../redux/slices/recommendation.slice";
+import { fetchPersonalizedFeed, setCurrentPage } from "../redux/slices/recommendation.slice";
 import { fetchWishlistEvents } from "../redux/slices/wishlist.slice";
 import EventCard from "../components/EventCard";
-import { FaHome, FaHeart, FaCog, FaBars, FaTimes } from "react-icons/fa";
+import { LayoutDashboard, Heart, Settings, Menu, X, CalendarDays, PanelLeftClose, PanelRightClose } from "lucide-react";
 
 const Dashboard = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
+
   const { events, loading, error, currentPage, totalPages } = useSelector((state) => state.recommendation);
-  const { authLoading } = useSelector((state) => state.auth);
-  const { isLoggedIn, user, userDetails } = useSelector((state) => state.auth);
-
-  // Fetch personalized events and wishlist when user details are available
-  React.useEffect(() => {
-    if (isLoggedIn && userDetails && events.length === 0 && !loading && currentPage >= 0 && currentPage < totalPages) {
-      dispatch(fetchPersonalizedFeed({ page: currentPage, size: 12 }));
-
-      // Also fetch wishlist to ensure icons are correct
-      const email = user?.email || userDetails?.email;
-      if (email) {
-        dispatch(fetchWishlistEvents(email));
-      }
-    }
-  }, [isLoggedIn, userDetails, events.length, loading, currentPage, totalPages, dispatch, user, userDetails]);
+  const { isLoggedIn, userDetails, authLoading } = useSelector((state) => state.auth);
+  
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
 
-  // Remove the useEffect from Dashboard since we're now fetching in initializeAuthAndFetchFeed
+  useEffect(() => {
+    if (isLoggedIn && userDetails) {
+      if (events.length === 0) {
+        dispatch(fetchPersonalizedFeed({ page: 0, size: 12 }));
+      }
+      dispatch(fetchWishlistEvents(userDetails.email));
+    }
+  }, [isLoggedIn, userDetails, dispatch, events.length]);
 
-  // Check if we're on the main dashboard route (not nested)
   const isMainDashboard = location.pathname === "/dashboard";
+  const isLoading = (loading || authLoading || (!userDetails && isLoggedIn));
 
-  if ((loading || authLoading) && isMainDashboard && isLoggedIn) {
+  if (isLoading && isMainDashboard) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-richblack-900 text-white">
-        <div className="text-xl">Loading your personalized events...</div>
-      </div>
-    );
-  }
-
-  // Show loading if we have a token but no user details yet (during app initialization)
-  // OR if we're logged in but don't have user details (during login redirect)
-  // Only show loading if we're actually logged in or have a token
-  if (((!userDetails && localStorage.getItem("authToken") && isMainDashboard) ||
-      (isLoggedIn && !userDetails && isMainDashboard)) && isLoggedIn) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-richblack-900 text-white">
-        <div className="text-xl">Loading your personalized events...</div>
-      </div>
-    );
-  }
-
-  if (error && isMainDashboard) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-richblack-900 text-white">
-        <div className="text-xl text-pink-200">{error}</div>
-      </div>
-    );
-  }
-
-  if (!isLoggedIn) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-richblack-900 text-white">
-        <div className="text-xl">Please log in to view your personalized events.</div>
+      <div className="min-h-screen flex items-center justify-center bg-[#1F1F2E] text-gray-300 font-sans">
+        Loading Your Personalized Hub...
       </div>
     );
   }
 
   const sidebarItems = [
-    { path: "/dashboard", icon: FaHome, label: "Home", active: isMainDashboard },
-    { path: "/dashboard/wishlist", icon: FaHeart, label: "Wishlist", active: location.pathname === "/dashboard/wishlist" },
-    { path: "/dashboard/profile", icon: FaCog, label: "My Profile", active: location.pathname === "/dashboard/profile" },
+    { path: "/dashboard", icon: LayoutDashboard, label: "Home" },
+    { path: "/dashboard/wishlist", icon: Heart, label: "Wishlist" },
+    { path: "/dashboard/profile", icon: Settings, label: "My Profile" },
+    // Add more links here to test sidebar scrolling if needed
   ];
 
   const handleNavigation = (path) => {
@@ -82,172 +50,96 @@ const Dashboard = () => {
     setSidebarOpen(false);
   };
 
-  const handlePageChange = (page) => {
-    if (page < 0 || page >= totalPages) return;
-    dispatch(setCurrentPage(page));
-    dispatch(fetchPersonalizedFeed({ page, size: 12 }));
-  };
-
   return (
-    <div className="min-h-screen bg-richblack-900 text-white flex">
-      {/* Sidebar */}
-      <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-richblack-800 transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0`}>
-        <div className="flex items-center justify-center h-16 bg-richblack-900 border-b border-richblack-700">
-          <h2 className="text-xl font-bold text-white">Dashboard</h2>
+    <div className="min-h-screen bg-[#1F1F2E] text-gray-200 flex font-sans">
+      {/* --- UPDATED SIDEBAR --- */}
+      <aside 
+        className={`fixed inset-y-0 left-0 z-50 bg-[#2C2C44] border-r border-white/10 
+                   transform lg:sticky lg:top-0 h-screen overflow-y-auto  // <-- KEY CHANGES HERE
+                   transition-all duration-300 ease-in-out
+                   ${isSidebarExpanded ? 'w-64' : 'w-20'}
+                   ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}
+      >
+        <div className="flex items-center justify-between h-20 px-4 border-b border-white/10 sticky top-0 bg-[#2C2C44] z-10">
+            <div className={`flex items-center gap-2 overflow-hidden transition-all duration-300 ${isSidebarExpanded ? 'w-40' : 'w-0'}`}>
+                <CalendarDays className="text-purple-400 flex-shrink-0" size={24}/>
+                <h2 className="text-2xl font-bold text-gray-100 whitespace-nowrap">HappenHub</h2>
+            </div>
+            <button 
+              onClick={() => setIsSidebarExpanded(!isSidebarExpanded)} 
+              className="p-2 rounded-lg hover:bg-white/10 hidden lg:block"
+            >
+                {isSidebarExpanded ? <PanelLeftClose /> : <PanelRightClose />} 
+            </button>
         </div>
 
-        <nav className="mt-8">
+        <nav className="mt-6">
           {sidebarItems.map((item) => {
-            const IconComponent = item.icon;
+            const isActive = location.pathname === item.path;
             return (
               <button
                 key={item.path}
                 onClick={() => handleNavigation(item.path)}
-                className={`w-full flex items-center px-6 py-3 text-left transition-colors ${
-                  item.active
-                    ? "bg-blue-600 text-white border-r-4 border-blue-400"
-                    : "text-gray-300 hover:bg-richblack-700 hover:text-white"
-                }`}
+                className={`w-full flex items-center py-3.5 text-left transition-all duration-200 relative
+                  ${isSidebarExpanded ? 'px-6' : 'px-0 justify-center'}
+                  ${isActive
+                    ? "bg-purple-600/20 text-purple-300 font-semibold"
+                    : "text-gray-400 hover:bg-white/5 hover:text-gray-200"
+                  }`}
               >
-                <IconComponent className="mr-3" />
-                {item.label}
+                {isActive && <div className={`absolute left-0 h-full w-1 bg-purple-500 rounded-r-full transition-all`}></div>}
+                <item.icon className="flex-shrink-0" size={22} />
+                <span className={`whitespace-nowrap overflow-hidden transition-all ${isSidebarExpanded ? 'w-full ml-4' : 'w-0'}`}>
+                  {item.label}
+                </span>
               </button>
             );
           })}
         </nav>
-      </div>
+      </aside>
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
-        {/* Header */}
-        <header className="bg-richblack-900 border-b border-richblack-700 px-4 py-4 lg:px-6">
+        <header className="bg-[#1F1F2E] border-b border-white/10 px-4 py-4 lg:px-6 sticky top-0 z-30">
           <div className="flex items-center justify-between">
             <div className="flex items-center">
-              <button
-                onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="lg:hidden mr-4 p-2 rounded-md text-gray-400 hover:text-white hover:bg-richblack-800"
-              >
-                {sidebarOpen ? <FaTimes /> : <FaBars />}
+              <button onClick={() => setSidebarOpen(!sidebarOpen)} className="lg:hidden mr-4 p-2 rounded-md text-gray-400 hover:text-white hover:bg-white/10">
+                {sidebarOpen ? <X /> : <Menu />}
               </button>
-              <h1 className="text-2xl font-bold text-white">
-                {sidebarItems.find(item => item.active)?.label || "Dashboard"}
+              <h1 className="text-xl font-bold text-gray-100">
+                {sidebarItems.find(item => location.pathname === item.path)?.label || "Dashboard"}
               </h1>
             </div>
             <div className="text-sm text-gray-400">
-              Welcome back, {userDetails?.firstName || user?.name || user?.firstName || "User"}!
+              Welcome, <span className="font-semibold text-gray-200">{userDetails?.firstName || "User"}</span>!
             </div>
           </div>
         </header>
 
-        {/* Content Area */}
-        <main className="flex-1 overflow-auto">
+        <main className="flex-1 overflow-y-auto">
           {isMainDashboard ? (
             <div className="p-6">
-              <motion.h1
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="text-4xl md:text-5xl font-bold text-center mb-8 bg-clip-text text-transparent bg-gradient-to-r from-pink-200 via-blue-100 to-yellow-50"
-              >
-                Your Personalized Events
+              <motion.h1 initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="text-3xl font-bold text-gray-100 mb-2">
+                Your Personalized Feed
               </motion.h1>
-
-              <motion.p
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-                className="text-center text-richblack-100 mb-12 text-lg"
-              >
-                Discover events tailored just for you based on your preferences.
+              <motion.p initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{delay: 0.1}} className="text-gray-400 mb-8">
+                Discover events we think you'll love.
               </motion.p>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {events.map((event, index) => (
                   <EventCard key={event.event_id} event={event} index={index} />
                 ))}
               </div>
-
-              {/* Pagination */}
-              {events.length > 0 && (
-                <div className="flex justify-center mt-12">
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => handlePageChange(currentPage - 1)}
-                      disabled={currentPage === 0}
-                      className="px-4 py-2 bg-richblack-800 border border-richblack-700 rounded-lg text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-richblack-700 transition-colors"
-                    >
-                      Previous
-                    </button>
-
-                    {/* Page Numbers */}
-                    {Array.from({ length: totalPages }, (_, i) => {
-                      const pageNumber = i;
-                      const isActive = pageNumber === currentPage;
-                      const isNearCurrent = Math.abs(pageNumber - currentPage) <= 2;
-                      const isFirstOrLast = pageNumber === 0 || pageNumber === totalPages - 1;
-
-                      // Show first page, last page, current page, and pages near current
-                      if (isFirstOrLast || isNearCurrent) {
-                        return (
-                          <button
-                            key={pageNumber}
-                            onClick={() => handlePageChange(pageNumber)}
-                            className={`px-4 py-2 border rounded-lg transition-colors ${
-                              isActive
-                                ? "bg-blue-600 border-blue-600 text-white"
-                                : "bg-richblack-800 border-richblack-700 text-white hover:bg-richblack-700"
-                            }`}
-                          >
-                            {pageNumber + 1}
-                          </button>
-                        );
-                      }
-
-                      // Show ellipsis for gaps
-                      if (pageNumber === currentPage - 3 || pageNumber === currentPage + 3) {
-                        return (
-                          <span key={pageNumber} className="px-2 py-2 text-richblack-400">
-                            ...
-                          </span>
-                        );
-                      }
-
-                      return null;
-                    })}
-
-                    <button
-                      onClick={() => handlePageChange(currentPage + 1)}
-                      disabled={currentPage === totalPages - 1}
-                      className="px-4 py-2 bg-richblack-800 border border-richblack-700 rounded-lg text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-richblack-700 transition-colors"
-                    >
-                      Next
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {events.length === 0 && (
-                <div className="text-center text-richblack-300 mt-12">
-                  <p className="text-xl">No personalized events found at the moment.</p>
-                  <p className="mt-2">Update your preferences to get better recommendations!</p>
-                </div>
-              )}
             </div>
           ) : (
             <Outlet />
           )}
         </main>
       </div>
-
-      {/* Overlay for mobile sidebar */}
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 z-40 bg-black bg-opacity-50 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
+      {sidebarOpen && <div className="fixed inset-0 z-40 bg-black/60 lg:hidden" onClick={() => setSidebarOpen(false)} />}
     </div>
   );
 };
 
 export default Dashboard;
-

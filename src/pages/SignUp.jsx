@@ -1,16 +1,17 @@
 import React from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { signupUser, clearError } from "../redux/slices/auth.slice";
+import { useNavigate } from "react-router-dom";
+import toast, { Toaster } from "react-hot-toast";
+
+// Import Redux actions
+import { signupUser, clearError as clearAuthError } from "../redux/slices/auth.slice";
 import {
   setCurrentStep,
   updateFormData,
-  setLoading,
   setError,
-  clearError as clearSignupError,
+  setLoading,
   resetSignup,
 } from "../redux/slices/signup.slice";
-import { useNavigate } from "react-router-dom";
-import toast, { Toaster } from "react-hot-toast";
 
 // Import modular components
 import ProgressBar from "../components/Signup/ProgressBar";
@@ -24,148 +25,116 @@ import RightPanel from "../components/Signup/RightPanel";
 const SignupPage = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { authLoading, error, isLoggedIn } = useSelector((state) => state.auth);
-  const { currentStep, totalSteps, formData, loading, signupError } = useSelector((state) => state.signup);
 
+  // Select state from Redux store
+  const { authLoading, error: authError, isLoggedIn } = useSelector((state) => state.auth);
+  const { currentStep, totalSteps, formData, loading, error: signupError } = useSelector((state) => state.signup);
+
+  // Redirect if already logged in
   React.useEffect(() => {
-    if (isLoggedIn) {
-      navigate("/dashboard");
-    }
+    if (isLoggedIn) navigate("/dashboard");
   }, [isLoggedIn, navigate]);
 
+  // Cleanup errors and reset form on unmount
   React.useEffect(() => {
     return () => {
-      dispatch(clearError());
-      dispatch(clearSignupError());
+      dispatch(clearAuthError());
+      dispatch(resetSignup());
     };
   }, [dispatch]);
 
+  // Handlers for form inputs
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    dispatch(updateFormData({ [name]: value }));
+    dispatch(updateFormData({ [e.target.name]: e.target.value }));
   };
 
   const handleInterestChange = (interest) => {
-    const updatedInterests = formData.interests.includes(interest)
+    const updated = formData.interests.includes(interest)
       ? formData.interests.filter((i) => i !== interest)
       : [...formData.interests, interest];
-    dispatch(updateFormData({ interests: updatedInterests }));
+    dispatch(updateFormData({ interests: updated }));
   };
 
   const handlePreferenceChange = (preference) => {
-    const updatedPreferences = formData.preferences.includes(preference)
+    const updated = formData.preferences.includes(preference)
       ? formData.preferences.filter((p) => p !== preference)
       : [...formData.preferences, preference];
-    dispatch(updateFormData({ preferences: updatedPreferences }));
+    dispatch(updateFormData({ preferences: updated }));
   };
 
-  const nextStep = () => {
-    if (currentStep < totalSteps) {
-      dispatch(setCurrentStep(currentStep + 1));
-    }
-  };
+  // Navigation logic
+  const nextStep = () => currentStep < totalSteps && dispatch(setCurrentStep(currentStep + 1));
+  const prevStep = () => currentStep > 1 && dispatch(setCurrentStep(currentStep - 1));
 
-  const prevStep = () => {
-    if (currentStep > 1) {
-      dispatch(setCurrentStep(currentStep - 1));
-    }
-  };
-
-  const handleSignup = async (e) => {
-    e.preventDefault();
-
+  // Final signup submission
+  const handleSignup = async () => {
     if (formData.password !== formData.confirmPassword) {
-      dispatch(setError("Passwords do not match"));
-      return;
+      return dispatch(setError("Passwords do not match."));
     }
-
+    
     dispatch(setLoading(true));
-    dispatch(setError(null));
-
-    const signupData = {
-      email: formData.email,
-      password: formData.password,
-      firstName: formData.firstName,
-      lastName: formData.lastName,
-      phoneNumber: formData.phoneNumber,
-      address: formData.address,
-      preferences: formData.preferences.map(pref => pref.toUpperCase()),
-      interests: formData.interests.map(interest => interest.toUpperCase()),
-    };
-
-    try {
-      const result = await dispatch(signupUser(signupData));
-      if (signupUser.fulfilled.match(result)) {
-        toast.success("Account created successfully! Welcome to HappenHub!");
-        dispatch(resetSignup());
-        navigate("/dashboard");
-      }
-    } catch (error) {
-      dispatch(setError("Signup failed. Please try again."));
-    } finally {
-      dispatch(setLoading(false));
+    const result = await dispatch(signupUser(formData));
+    
+    if (signupUser.fulfilled.match(result)) {
+      toast.success("Account created successfully! Welcome aboard.");
+      dispatch(resetSignup());
+      navigate("/dashboard");
     }
+    // Note: The error from signupUser (rejected case) is handled by the auth slice's extraReducer
+    dispatch(setLoading(false));
   };
 
-  const handleGoogleSignup = () => {
-    console.log("Google signup clicked");
-  };
-
+  // Render the component for the current step
   const renderCurrentStep = () => {
     switch (currentStep) {
-      case 1:
-        return <Step1 formData={formData} onInputChange={handleInputChange} />;
-      case 2:
-        return <Step2 formData={formData} onInterestChange={handleInterestChange} />;
-      case 3:
-        return <Step3 formData={formData} onPreferenceChange={handlePreferenceChange} />;
-      case 4:
-        return <Step4 formData={formData} />;
-      default:
-        return <Step1 formData={formData} onInputChange={handleInputChange} />;
+      case 1: return <Step1 formData={formData} onInputChange={handleInputChange} />;
+      case 2: return <Step2 formData={formData} onInterestChange={handleInterestChange} />;
+      case 3: return <Step3 formData={formData} onPreferenceChange={handlePreferenceChange} />;
+      case 4: return <Step4 formData={formData} />;
+      default: return null;
     }
   };
 
   return (
-    <div className="w-full mx-auto min-h-screen bg-richblack-900 text-white py-12 px-4 md:px-16">
+    <div className="w-full min-h-screen bg-[#1F1F2E] text-gray-200 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 font-sans">
       <Toaster position="top-right" />
-      {/* Unified Heading */}
-      <div className="text-center mb-8">
-        <h2 className="text-4xl md:text-5xl font-bold text-white animate-fadeIn">
-          Create Your Account
-        </h2>
-        <p className="text-gray-400 text-sm mt-2 animate-fadeIn delay-200">
-          Join us and explore opportunities.
-        </p>
-      </div>
-
-      <ProgressBar currentStep={currentStep} totalSteps={totalSteps} />
-
-      <div className="flex flex-col md:flex-row items-center md:items-start justify-center gap-12 md:gap-16 w-full">
+      <div className="max-w-6xl w-full mx-auto grid md:grid-cols-2 gap-16 items-start">
         {/* Left Side: Form */}
-        <div className="flex-1 flex flex-col justify-center items-center">
-          <div className="w-full max-w-xl">
-            {renderCurrentStep()}
+        <div className="w-full max-w-lg mx-auto">
+          <div className="text-left mb-8">
+            <h2 className="text-4xl font-extrabold text-gray-100">
+              Create Your Account
+            </h2>
+            <p className="text-gray-400 mt-2">
+              Join HappenHub to unlock a world of events tailored for you.
+            </p>
+          </div>
 
+          <ProgressBar currentStep={currentStep} totalSteps={totalSteps} />
+
+          <div className="mt-8 min-h-[350px]">
+            {renderCurrentStep()}
+          </div>
+
+          <div className="mt-8">
             <NavigationButtons
               currentStep={currentStep}
               totalSteps={totalSteps}
               onPrev={prevStep}
               onNext={nextStep}
               onSubmit={handleSignup}
-              loading={loading}
-              authLoading={authLoading}
+              loading={loading || authLoading}
             />
-
-            {/* Error Display */}
-            {(error || signupError) && (
-              <div className="text-red-400 text-sm text-center mt-4">
-                {error || signupError}
+            
+            {(authError || signupError) && (
+              <div className="text-pink-400 text-sm text-center mt-4">
+                {authError || signupError}
               </div>
             )}
           </div>
         </div>
 
+        {/* Right Side: Informational Panel */}
         <RightPanel currentStep={currentStep} />
       </div>
     </div>

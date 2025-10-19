@@ -2,34 +2,22 @@ import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { motion } from "framer-motion";
 import { updateProfile } from "../../redux/slices/auth.slice";
+import { Check, Edit, X } from "lucide-react";
+import toast from "react-hot-toast";
 
 const Profile = () => {
   const dispatch = useDispatch();
-  const { user, userDetails, authLoading } = useSelector((state) => state.auth);
+  const { userDetails, authLoading } = useSelector((state) => state.auth);
 
   const [isEditing, setIsEditing] = useState(false);
+  const [profileData, setProfileData] = useState({ firstName: '', lastName: '', email: '', phone: '', bio: '' });
   const [interests, setInterests] = useState([]);
   const [preferences, setPreferences] = useState([]);
-  const [profileData, setProfileData] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
-    bio: ''
-  });
 
-  const availableInterests = [
-    "Technology", "Business", "Mathematics", "Science", "Film", "Sports",
-    "Software Development", "Data Science", "Design", "Marketing", "Finance", "Healthcare"
-  ];
+  const availableInterests = [ "Technology", "Software", "AI & ML", "Web Dev", "Design", "Startups", "Marketing", "Business", "Gaming", "Science", "Finance", "Health" ];
+  const availablePreferences = [ "Hackathon", "Workshop", "Webinar", "Competition", "Internship", "Job Fair", "Networking", "Conference" ];
 
-  const availablePreferences = [
-    "Internship", "Job", "Hackathon", "Workshop", "Webinar", "Conference",
-    "Networking Event", "Career Fair", "Training Program", "Competition"
-  ];
-
-  useEffect(() => {
-    // Load user preferences and profile data
+  const resetState = () => {
     if (userDetails) {
       setInterests(userDetails.interests || []);
       setPreferences(userDetails.preferences || []);
@@ -41,236 +29,97 @@ const Profile = () => {
         bio: userDetails.address || ''
       });
     }
-  }, [userDetails]);
-
-  const handleInterestChange = (interest) => {
-    setInterests(prev =>
-      prev.includes(interest)
-        ? prev.filter(i => i !== interest)
-        : [...prev, interest]
-    );
   };
 
-  const handlePreferenceChange = (preference) => {
-    setPreferences(prev =>
-      prev.includes(preference)
-        ? prev.filter(p => p !== preference)
-        : [...prev, preference]
-    );
-  };
+  useEffect(resetState, [userDetails]);
 
-  const handleProfileChange = (field, value) => {
-    setProfileData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  };
+  const handleInterestChange = (interest) => setInterests(prev => prev.includes(interest) ? prev.filter(i => i !== interest) : [...prev, interest]);
+  const handlePreferenceChange = (preference) => setPreferences(prev => prev.includes(preference) ? prev.filter(p => p !== preference) : [...prev, preference]);
+  const handleProfileChange = (e) => setProfileData(prev => ({ ...prev, [e.target.name]: e.target.value }));
 
   const handleSave = () => {
-    const updateData = {
-      ...profileData,
-      interests,
-      preferences
-    };
-    dispatch(updateProfile(updateData));
+    const updatedData = { ...profileData, interests, preferences };
+    dispatch(updateProfile(updatedData)).then((result) => {
+        if(updateProfile.fulfilled.match(result)) {
+            toast.success("Profile updated successfully!");
+        }
+    });
     setIsEditing(false);
   };
 
   const handleCancel = () => {
-    // Reset to original data
-    if (userDetails) {
-      setProfileData({
-        firstName: userDetails.firstName || '',
-        lastName: userDetails.lastName || '',
-        email: userDetails.email || '',
-        phone: userDetails.phone || '',
-        bio: userDetails.bio || ''
-      });
-      setInterests(userDetails.interests || []);
-      setPreferences(userDetails.preferences || []);
-    }
+    resetState();
     setIsEditing(false);
   };
 
+  const inputStyle = "w-full bg-[#2C2C44] px-4 py-3 rounded-lg text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 border border-gray-700 transition-all";
+  const displayStyle = "w-full bg-[#2C2C44] px-4 py-3 rounded-lg text-gray-300 border border-gray-700 min-h-[52px]";
+  const labelStyle = "block text-sm font-medium text-gray-400 mb-1";
+
   return (
     <div className="p-6">
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="mb-8"
-      >
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold text-white mb-2">My Profile</h1>
-            <p className="text-gray-400">View and manage your profile information and preferences</p>
-          </div>
-          {!isEditing && (
-            <button
-              onClick={() => setIsEditing(true)}
-              className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors"
-            >
-              Edit Profile
-            </button>
-          )}
+      <div className="flex justify-between items-center mb-8">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-100">My Profile</h1>
+          <p className="text-gray-400">Manage your profile and event preferences.</p>
         </div>
-      </motion.div>
+        {!isEditing && (
+          <button onClick={() => setIsEditing(true)} className="flex items-center gap-2 px-5 py-2 rounded-lg bg-purple-600 text-white font-semibold hover:bg-purple-700 transition-colors">
+            <Edit size={16} /> Edit Profile
+          </button>
+        )}
+      </div>
 
-      <div className="space-y-8">
-        {/* Profile Information */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-richblack-800 p-6 rounded-lg"
-        >
-          <h2 className="text-xl font-semibold text-blue-300 mb-4">Profile Information</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="space-y-6">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-[#2C2C44] border border-white/10 p-6 rounded-xl">
+          <h2 className="text-xl font-semibold text-purple-400 mb-6">Profile Information</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">First Name</label>
-              {isEditing ? (
-                <input
-                  type="text"
-                  value={profileData.firstName}
-                  onChange={(e) => handleProfileChange('firstName', e.target.value)}
-                  className="w-full px-3 py-2 bg-richblack-700 border border-richblack-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              ) : (
-                <p className="px-3 py-2 bg-richblack-700 border border-richblack-600 rounded-md text-white">{profileData.firstName || 'Not provided'}</p>
-              )}
+              <label className={labelStyle}>First Name</label>
+              {isEditing ? <input name="firstName" value={profileData.firstName} onChange={handleProfileChange} className={inputStyle} /> : <p className={displayStyle}>{profileData.firstName}</p>}
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">Last Name</label>
-              {isEditing ? (
-                <input
-                  type="text"
-                  value={profileData.lastName}
-                  onChange={(e) => handleProfileChange('lastName', e.target.value)}
-                  className="w-full px-3 py-2 bg-richblack-700 border border-richblack-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              ) : (
-                <p className="px-3 py-2 bg-richblack-700 border border-richblack-600 rounded-md text-white">{profileData.lastName || 'Not provided'}</p>
-              )}
+              <label className={labelStyle}>Last Name</label>
+              {isEditing ? <input name="lastName" value={profileData.lastName} onChange={handleProfileChange} className={inputStyle} /> : <p className={displayStyle}>{profileData.lastName}</p>}
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">Email</label>
-              {isEditing ? (
-                <input
-                  type="email"
-                  value={profileData.email}
-                  onChange={(e) => handleProfileChange('email', e.target.value)}
-                  className="w-full px-3 py-2 bg-richblack-700 border border-richblack-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              ) : (
-                <p className="px-3 py-2 bg-richblack-700 border border-richblack-600 rounded-md text-white">{profileData.email || 'Not provided'}</p>
-              )}
+              <label className={labelStyle}>Email</label>
+              <p className={`${displayStyle} cursor-not-allowed bg-gray-800/50`}>{profileData.email}</p>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">Phone</label>
-              {isEditing ? (
-                <input
-                  type="tel"
-                  value={profileData.phone}
-                  onChange={(e) => handleProfileChange('phone', e.target.value)}
-                  className="w-full px-3 py-2 bg-richblack-700 border border-richblack-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              ) : (
-                <p className="px-3 py-2 bg-richblack-700 border border-richblack-600 rounded-md text-white">{profileData.phone || 'Not provided'}</p>
-              )}
+              <label className={labelStyle}>Phone</label>
+              {isEditing ? <input name="phone" value={profileData.phone} onChange={handleProfileChange} className={inputStyle} /> : <p className={displayStyle}>{profileData.phone || 'Not provided'}</p>}
             </div>
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-300 mb-2">Address</label>
-              {isEditing ? (
-                <textarea
-                  value={profileData.bio}
-                  onChange={(e) => handleProfileChange('bio', e.target.value)}
-                  rows={3}
-                  className="w-full px-3 py-2 bg-richblack-700 border border-richblack-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Tell us about yourself..."
-                />
-              ) : (
-                <p className="px-3 py-2 bg-richblack-700 border border-richblack-600 rounded-md text-white min-h-[80px]">{profileData.bio || 'No bio provided'}</p>
-              )}
+              <label className={labelStyle}>Address / Bio</label>
+              {isEditing ? <textarea name="bio" value={profileData.bio} onChange={handleProfileChange} rows={3} className={inputStyle} /> : <p className={`${displayStyle} min-h-[80px]`}>{profileData.bio || 'Not provided'}</p>}
             </div>
           </div>
         </motion.div>
-
-        {/* Professional Interests */}
+        
         {isEditing && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="bg-richblack-800 p-6 rounded-lg"
-          >
-            <h2 className="text-xl font-semibold text-green-300 mb-4">Professional Interests</h2>
-            <p className="text-gray-400 mb-6">Select all that interest you professionally</p>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              {availableInterests.map((interest) => (
-                <button
-                  key={interest}
-                  onClick={() => handleInterestChange(interest)}
-                  className={`p-4 rounded-lg border-2 transition-all duration-300 ${
-                    interests.includes(interest)
-                      ? "border-green-500 bg-green-500/20 text-green-300"
-                      : "border-richblack-600 bg-richblack-700 text-gray-300 hover:border-gray-500"
-                  }`}
-                >
-                  {interest}
-                </button>
-              ))}
-            </div>
-          </motion.div>
-        )}
-
-        {/* Event Preferences */}
-        {isEditing && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="bg-richblack-800 p-6 rounded-lg"
-          >
-            <h2 className="text-xl font-semibold text-purple-300 mb-4">Event Preferences</h2>
-            <p className="text-gray-400 mb-6">What types of events are you interested in?</p>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              {availablePreferences.map((preference) => (
-                <button
-                  key={preference}
-                  onClick={() => handlePreferenceChange(preference)}
-                  className={`p-4 rounded-lg border-2 transition-all duration-300 ${
-                    preferences.includes(preference)
-                      ? "border-purple-500 bg-purple-500/20 text-purple-300"
-                      : "border-richblack-600 bg-richblack-700 text-gray-300 hover:border-gray-500"
-                  }`}
-                >
-                  {preference}
-                </button>
-              ))}
-            </div>
-          </motion.div>
-        )}
-
-        {/* Save/Cancel Buttons */}
-        {isEditing && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="flex justify-center space-x-4"
-          >
-            <button
-              onClick={handleCancel}
-              className="px-8 py-3 bg-gray-600 hover:bg-gray-700 text-white font-semibold rounded-lg transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleSave}
-              disabled={authLoading}
-              className="px-8 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-colors"
-            >
-              {authLoading ? 'Saving...' : 'Save Profile & Preferences'}
-            </button>
-          </motion.div>
+          <>
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-[#2C2C44] border border-white/10 p-6 rounded-xl">
+              <h2 className="text-xl font-semibold text-purple-400 mb-4">Your Interests</h2>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                {availableInterests.map(item => <button key={item} onClick={() => handleInterestChange(item)} className={`relative flex items-center justify-center p-3 h-16 rounded-lg border font-semibold text-center transition-all ${interests.includes(item) ? 'bg-purple-600/30 border-purple-500 text-white' : 'bg-gray-800/50 border-gray-700 text-gray-300 hover:border-purple-500'}`}>{item}{interests.includes(item) && <span className="absolute top-1.5 right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-purple-500"><Check size={10} /></span>}</button>)}
+              </div>
+            </motion.div>
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-[#2C2C44] border border-white/10 p-6 rounded-xl">
+              <h2 className="text-xl font-semibold text-purple-400 mb-4">Event Preferences</h2>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                {availablePreferences.map(item => <button key={item} onClick={() => handlePreferenceChange(item)} className={`relative flex items-center justify-center p-3 h-16 rounded-lg border font-semibold text-center transition-all ${preferences.includes(item) ? 'bg-purple-600/30 border-purple-500 text-white' : 'bg-gray-800/50 border-gray-700 text-gray-300 hover:border-purple-500'}`}>{item}{preferences.includes(item) && <span className="absolute top-1.5 right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-purple-500"><Check size={10} /></span>}</button>)}
+              </div>
+            </motion.div>
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="flex justify-end space-x-4 mt-6">
+              <button onClick={handleCancel} className="flex items-center gap-2 px-6 py-3 rounded-lg font-semibold bg-transparent text-gray-300 border border-gray-700 hover:bg-white/5">
+                <X size={18} /> Cancel
+              </button>
+              <button onClick={handleSave} disabled={authLoading} className="flex items-center gap-2 px-6 py-3 rounded-lg font-semibold bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-60">
+                {authLoading ? 'Saving...' : <><Check size={18} /> Save Changes</>}
+              </button>
+            </motion.div>
+          </>
         )}
       </div>
     </div>

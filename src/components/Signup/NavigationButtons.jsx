@@ -1,4 +1,5 @@
 import React from "react";
+import { ChevronLeft, ChevronRight, CheckCircle } from "lucide-react";
 
 const NavigationButtons = ({
   currentStep,
@@ -7,39 +8,63 @@ const NavigationButtons = ({
   onNext,
   onSubmit,
   loading,
-  authLoading
 }) => {
-  return (
-    <div className="flex justify-between mt-8">
-      {currentStep > 1 && (
-        <button
-          type="button"
-          onClick={onPrev}
-          className="px-6 py-3 bg-richblack-700 hover:bg-richblack-600 text-white rounded-lg transition-colors"
-        >
-          Previous
-        </button>
-      )}
+  // Define consistent button styles for reusability
+  const primaryButtonStyle = `
+    flex items-center gap-2 px-6 py-3 rounded-lg font-semibold 
+    bg-purple-600 text-white hover:bg-purple-700 
+    transition-all duration-300 shadow-lg shadow-purple-600/30 
+    disabled:opacity-60 disabled:cursor-not-allowed transform hover:scale-105
+  `;
+  
+  const secondaryButtonStyle = `
+    flex items-center gap-2 px-6 py-3 rounded-lg font-semibold 
+    bg-transparent text-gray-300 border border-gray-700 
+    hover:bg-white/5 hover:border-gray-500 transition-colors duration-300
+  `;
 
-      {currentStep < totalSteps ? (
-        <button
-          type="button"
-          onClick={onNext}
-          className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors ml-auto"
-        >
-          Next
-        </button>
-      ) : (
-        <form onSubmit={onSubmit} className="ml-auto">
+  return (
+    <div className="flex items-center justify-between mt-8">
+      {/* Previous Button */}
+      {/* This div acts as a placeholder to maintain alignment even when the button is hidden */}
+      <div>
+        {currentStep > 1 && (
           <button
-            type="submit"
-            disabled={loading || authLoading}
-            className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            type="button"
+            onClick={onPrev}
+            className={secondaryButtonStyle}
           >
-            {loading || authLoading ? "Creating Account..." : "Create Account"}
+            <ChevronLeft size={18} />
+            Previous
           </button>
-        </form>
-      )}
+        )}
+      </div>
+
+      {/* Next or Submit Button */}
+      <div>
+        {currentStep < totalSteps ? (
+          // "Next" button for intermediate steps
+          <button
+            type="button"
+            onClick={onNext}
+            className={primaryButtonStyle}
+          >
+            Next
+            <ChevronRight size={18} />
+          </button>
+        ) : (
+          // "Create Account" button for the final step
+          <button
+            type="button" // Use type="button" and handle submit via onClick
+            onClick={onSubmit}
+            disabled={loading}
+            className={primaryButtonStyle}
+          >
+            {loading ? "Creating Account..." : "Create Account"}
+            {!loading && <CheckCircle size={18} />}
+          </button>
+        )}
+      </div>
     </div>
   );
 };

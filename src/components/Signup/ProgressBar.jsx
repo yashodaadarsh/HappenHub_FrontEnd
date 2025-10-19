@@ -1,59 +1,59 @@
 import React from "react";
-import { FaUser, FaBriefcase, FaHeart, FaCheck } from "react-icons/fa";
+import { UserCircle, Sparkles, LayoutGrid, CheckCircle2 } from "lucide-react";
 
-const ProgressBar = ({ currentStep, totalSteps }) => {
-  const steps = [
-    { icon: FaUser, label: "Details" },
-    { icon: FaBriefcase, label: "Interests" },
-    { icon: FaHeart, label: "Preferences" },
-    { icon: FaCheck, label: "Review" },
-  ];
+// Configuration for the steps, aligned with RightPanel.jsx for consistency
+const steps = [
+  { icon: UserCircle, label: "Details" },
+  { icon: Sparkles, label: "Interests" },
+  { icon: LayoutGrid, label: "Preferences" },
+  { icon: CheckCircle2, label: "Review" },
+];
 
+const ProgressBar = ({ currentStep }) => {
   return (
-    <div className="w-full max-w-2xl mx-auto mb-8">
-      <div className="flex justify-between items-center mb-4">
-        {steps.map((step, i) => {
-          const IconComponent = step.icon;
-          const isCompleted = i + 1 < currentStep;
-          const isCurrent = i + 1 === currentStep;
-          const isUpcoming = i + 1 > currentStep;
+    <div className="w-full max-w-lg mx-auto mb-10">
+      <div className="flex items-center">
+        {steps.map((step, index) => {
+          const stepNumber = index + 1;
+          const isCompleted = stepNumber < currentStep;
+          const isCurrent = stepNumber === currentStep;
 
           return (
-            <React.Fragment key={i}>
-              <div className="flex flex-col items-center">
+            <React.Fragment key={index}>
+              {/* Step Icon and Label */}
+              <div className="flex flex-col items-center text-center">
                 <div
-                  className={`w-12 h-12 rounded-full flex items-center justify-center text-lg font-semibold transition-all duration-300 ${
-                    isCompleted
-                      ? "bg-green-600 text-white shadow-lg shadow-green-500/30"
-                      : isCurrent
-                      ? "bg-blue-600 text-white shadow-lg shadow-blue-500/30"
-                      : "bg-richblack-700 text-gray-400"
-                  }`}
+                  className={`
+                    w-12 h-12 rounded-full flex items-center justify-center border-2 
+                    transition-all duration-300
+                    ${
+                      isCompleted
+                        ? "bg-purple-600 border-purple-600 text-white shadow-lg shadow-purple-600/30"
+                        : isCurrent
+                        ? "bg-transparent border-purple-500 text-purple-400"
+                        : "bg-[#2C2C44] border-gray-700 text-gray-500"
+                    }
+                  `}
                 >
-                  <IconComponent />
+                  <step.icon size={24} strokeWidth={isCurrent ? 2.5 : 2} />
                 </div>
-                <span className={`text-xs mt-2 transition-all duration-300 ${
-                  isCompleted
-                    ? "text-green-400 font-semibold"
-                    : isCurrent
-                    ? "text-blue-400 font-semibold"
-                    : "text-gray-400"
-                }`}>
+                <p
+                  className={`
+                    mt-2 text-xs font-semibold transition-colors duration-300
+                    ${isCompleted || isCurrent ? "text-gray-200" : "text-gray-500"}
+                  `}
+                >
                   {step.label}
-                </span>
+                </p>
               </div>
-              {i < steps.length - 1 && (
-                <div className="flex-1 mx-4">
-                  <div className="w-full bg-richblack-700 rounded-full h-1">
-                    <div
-                      className={`h-1 rounded-full transition-all duration-500 ${
-                        i + 1 < currentStep ? "bg-green-600" : "bg-blue-600"
-                      }`}
-                      style={{
-                        width: i + 1 < currentStep ? "100%" : i + 1 === currentStep - 1 ? "50%" : "0%"
-                      }}
-                    ></div>
-                  </div>
+
+              {/* Connector Line (not shown after the last step) */}
+              {index < steps.length - 1 && (
+                <div className="flex-1 h-1 mx-2 bg-gray-700 rounded-full">
+                  <div
+                    className="h-1 bg-purple-600 rounded-full transition-all duration-500"
+                    style={{ width: isCompleted ? "100%" : "0%" }}
+                  ></div>
                 </div>
               )}
             </React.Fragment>

@@ -1,209 +1,116 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { motion } from "framer-motion";
-import {
-  fetchEvents,
-  setSearchQuery,
-  setFilterType,
-  setCurrentPage,
-  setSortBy,
-} from "../redux/slices/explore.slice";
-import EventCard from "../components/EventCard";
+import { motion, AnimatePresence } from "framer-motion";
+import { fetchEvents, setSearchQuery, setFilterType, setCurrentPage, setSortBy } from "../redux/slices/explore.slice";
+import ExploreEventCard from "../components/ExploreEventCard"; // <-- Import the new card
+import { Search, Filter, ListOrdered, SearchX, ChevronLeft, ChevronRight } from "lucide-react";
 
 const Explore = () => {
   const dispatch = useDispatch();
-  const { events, loading, error, currentPage, searchQuery, filterType, sortBy, totalPages } =
-    useSelector((state) => state.explore);
-
-  const [localSearch, setLocalSearch] = useState(searchQuery);
-  const [localFilter, setLocalFilter] = useState(filterType);
-  const [localSort, setLocalSort] = useState(sortBy);
+  const { events, loading, error, currentPage, searchQuery, filterType, sortBy, totalPages } = useSelector((state) => state.explore);
 
   useEffect(() => {
-    dispatch(
-      fetchEvents({
-        type: "explore",
-        page: currentPage,
-        search: searchQuery,
-        filterType: filterType,
-        sortBy: sortBy,
-      })
-    );
+    // Only dispatch if not loading to prevent race conditions on fast changes
+    if (!loading) {
+      dispatch(fetchEvents({ page: currentPage, search: searchQuery, filterType, sortBy }));
+    }
   }, [dispatch, currentPage, searchQuery, filterType, sortBy]);
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-richblack-900 text-white">
-        <div className="text-xl">Loading events...</div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-richblack-900 text-white">
-        <div className="text-xl text-pink-200">{error}</div>
-      </div>
-    );
-  }
-
-  const handleSearch = () => {
-    dispatch(setSearchQuery(localSearch));
+  const handleSearchChange = (e) => {
+    dispatch(setSearchQuery(e.target.value));
     dispatch(setCurrentPage(0));
   };
 
-  const handleFilter = (type) => {
-    setLocalFilter(type);
-    dispatch(setFilterType(type));
+  const handleFilterChange = (e) => {
+    dispatch(setFilterType(e.target.value));
     dispatch(setCurrentPage(0));
   };
 
-  const handleSort = (sort) => {
-    setLocalSort(sort);
-    dispatch(setSortBy(sort));
+  const handleSortChange = (e) => {
+    dispatch(setSortBy(e.target.value));
     dispatch(setCurrentPage(0));
   };
 
   const handlePageChange = (page) => {
-    if (page < 0) return;
+    if (page < 0 || page >= totalPages) return;
     dispatch(setCurrentPage(page));
   };
 
+  if (loading && events.length === 0) {
+    return <div className="min-h-screen flex items-center justify-center bg-[#1F1F2E] text-gray-300">Loading Events...</div>;
+  }
+  
   return (
-    <div className="min-h-screen bg-richblack-900 text-white px-6 py-12">
-      <motion.h1
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="text-4xl md:text-5xl font-bold text-center mb-8 bg-clip-text text-transparent bg-gradient-to-r from-pink-200 via-blue-100 to-yellow-50"
-      >
-        Explore All Events
-      </motion.h1>
+    <div className="min-h-screen bg-[#1F1F2E] text-gray-200 px-4 sm:px-6 py-12 font-sans">
+      <div className="max-w-7xl mx-auto">
+        <motion.h1 initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="text-4xl md:text-5xl font-extrabold text-center mb-4 text-gray-100">
+          Explore Events
+        </motion.h1>
+        <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="text-center text-gray-400 mb-10 text-lg">
+          Find your next opportunity. Search, filter, and sort through all available events.
+        </motion.p>
 
-      <motion.p
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-        className="text-center text-richblack-100 mb-12 text-lg"
-      >
-        Browse through all available events. Sign up to get personalized
-        recommendations!
-      </motion.p>
-
-      <div className="max-w-7xl mx-auto flex flex-col">
-        {/* Search and Filter Bar */}
-        <div className="mb-8 flex flex-col md:flex-row gap-4 items-center justify-center">
-          <div className="flex gap-2">
-            <input
-              type="text"
-              placeholder="Search events..."
-              value={localSearch}
-              onChange={(e) => setLocalSearch(e.target.value)}
-              className="px-4 py-2 bg-richblack-800 border border-richblack-700 rounded-lg text-white placeholder-richblack-400 focus:outline-none focus:border-blue-400"
-            />
-            <button
-              onClick={handleSearch}
-              className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-            >
-              Search
-            </button>
+        {/* --- Search and Filter Panel --- */}
+        <motion.div layout className="bg-[#2C2C44] border border-white/10 rounded-xl p-4 mb-8 flex flex-wrap items-center justify-between gap-4 sticky top-20 z-20 backdrop-blur-sm">
+          <div className="relative flex-grow min-w-[250px]">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={20} />
+            <input type="text" placeholder="Search by title, type, or location..." value={searchQuery} onChange={handleSearchChange} className="w-full bg-[#1F1F2E] border border-gray-700 rounded-lg pl-10 pr-4 py-2.5 text-gray-200 focus:outline-none focus:ring-2 focus:ring-purple-500" />
           </div>
-
-          <div className="flex gap-2">
-            <select
-              value={localFilter}
-              onChange={(e) => handleFilter(e.target.value)}
-              className="px-4 py-2 bg-richblack-800 border border-richblack-700 rounded-lg text-white focus:outline-none focus:border-blue-400"
-            >
-              <option value="">All Types</option>
-              <option value="job">Job</option>
-              <option value="internship">Internship</option>
-              <option value="hackathon">Hackathon</option>
-              <option value="workshop">Workshop</option>
-            </select>
-            <select
-              value={localSort}
-              onChange={(e) => handleSort(e.target.value)}
-              className="px-4 py-2 bg-richblack-800 border border-richblack-700 rounded-lg text-white focus:outline-none focus:border-blue-400"
-            >
-              <option value="">Sort By</option>
-              <option value="date">Start Date</option>
-              <option value="salary">Salary</option>
-              <option value="popularity">Popularity</option>
-            </select>
-          </div>
-        </div>
-
-        {/* Events Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {events.map((event, index) => (
-            <EventCard key={event.event_id} event={event} index={index} />
-          ))}
-        </div>
-
-        {/* Pagination */}
-        {events.length > 0 && (
-          <div className="flex justify-center mt-12">
-            <div className="flex gap-2">
-              <button
-                onClick={() => handlePageChange(currentPage - 1)}
-                disabled={currentPage === 0}
-                className="px-4 py-2 bg-richblack-800 border border-richblack-700 rounded-lg text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-richblack-700 transition-colors"
-              >
-                Previous
-              </button>
-
-              {/* Page Numbers */}
-              {Array.from({ length: totalPages }, (_, i) => {
-                const pageNumber = i;
-                const isActive = pageNumber === currentPage;
-                const isNearCurrent = Math.abs(pageNumber - currentPage) <= 2;
-                const isFirstOrLast = pageNumber === 0 || pageNumber === totalPages - 1;
-
-                // Show first page, last page, current page, and pages near current
-                if (isFirstOrLast || isNearCurrent) {
-                  return (
-                    <button
-                      key={pageNumber}
-                      onClick={() => handlePageChange(pageNumber)}
-                      className={`px-4 py-2 border rounded-lg transition-colors ${
-                        isActive
-                          ? "bg-blue-600 border-blue-600 text-white"
-                          : "bg-richblack-800 border-richblack-700 text-white hover:bg-richblack-700"
-                      }`}
-                    >
-                      {pageNumber + 1}
-                    </button>
-                  );
-                }
-
-                // Show ellipsis for gaps
-                if (pageNumber === currentPage - 3 || pageNumber === currentPage + 3) {
-                  return (
-                    <span key={pageNumber} className="px-2 py-2 text-richblack-400">
-                      ...
-                    </span>
-                  );
-                }
-
-                return null;
-              })}
-
-              <button
-                onClick={() => handlePageChange(currentPage + 1)}
-                disabled={currentPage === totalPages - 1}
-                className="px-4 py-2 bg-richblack-800 border border-richblack-700 rounded-lg text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-richblack-700 transition-colors"
-              >
-                Next
-              </button>
+          <div className="flex items-center gap-4">
+            <div className="relative">
+                <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
+                <select value={filterType} onChange={handleFilterChange} className="appearance-none w-full bg-[#1F1F2E] border border-gray-700 rounded-lg pl-10 pr-4 py-2.5 text-gray-200 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    <option value="">All Types</option>
+                    <option value="JOB">Job</option>
+                    <option value="INTERNSHIP">Internship</option>
+                    <option value="HACKATHON">Hackathon</option>
+                    <option value="WORKSHOP">Workshop</option>
+                </select>
+            </div>
+            <div className="relative">
+                <ListOrdered className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
+                <select value={sortBy} onChange={handleSortChange} className="appearance-none w-full bg-[#1F1F2E] border border-gray-700 rounded-lg pl-10 pr-4 py-2.5 text-gray-200 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    <option value="">Sort By</option>
+                    <option value="start_date">Start Date</option>
+                    <option value="salary">Reward</option>
+                </select>
             </div>
           </div>
-        )}
+        </motion.div>
 
-        {/* No Events */}
-        {events.length === 0 && (
-          <div className="text-center text-richblack-300 mt-12">
-            <p className="text-xl">No events found at the moment.</p>
-            <p className="mt-2">Check back later for new opportunities!</p>
+        {/* --- Events List --- */}
+        <div className="relative">
+            <AnimatePresence>
+                {loading && (
+                    <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="absolute inset-0 bg-[#1F1F2E]/50 backdrop-blur-sm flex items-center justify-center z-10 rounded-xl">
+                        <div className="h-8 w-8 border-4 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+            
+            {events.length > 0 ? (
+                <motion.div layout className="grid grid-cols-1 gap-6">
+                    {events.map((event, index) => (
+                        <ExploreEventCard key={event.event_id} event={event} index={index} />
+                    ))}
+                </motion.div>
+            ) : !loading && (
+                 <div className="text-center text-gray-500 mt-16 flex flex-col items-center">
+                    <SearchX size={64} className="mb-4 text-gray-600" />
+                    <p className="text-xl font-semibold text-gray-400">No Events Found</p>
+                    <p className="mt-2">Try adjusting your search or filters.</p>
+                </div>
+            )}
+        </div>
+
+        {/* --- Pagination --- */}
+        {totalPages > 1 && (
+          <div className="flex justify-center items-center mt-12 space-x-2">
+            <button onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 0} className="p-2 rounded-lg bg-[#2C2C44] border border-gray-700 disabled:opacity-50 hover:bg-white/5 transition-colors"><ChevronLeft /></button>
+            {[...Array(totalPages)].map((_, i) => (
+              <button key={i} onClick={() => handlePageChange(i)} className={`px-4 py-2 rounded-lg font-semibold transition-colors ${currentPage === i ? 'bg-purple-600 text-white' : 'bg-[#2C2C44] border border-gray-700 hover:bg-white/5'}`}>{i + 1}</button>
+            ))}
+            <button onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage >= totalPages - 1} className="p-2 rounded-lg bg-[#2C2C44] border border-gray-700 disabled:opacity-50 hover:bg-white/5 transition-colors"><ChevronRight /></button>
           </div>
         )}
       </div>

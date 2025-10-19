@@ -1,117 +1,144 @@
 import { motion } from "framer-motion";
-import { FaCalendarAlt, FaBell, FaUserFriends, FaStar } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
+import { Clock, Cpu, Users, Shield, CheckCircle, ArrowRight } from "lucide-react"; // Updated to Lucide icons
 
-const features = [
-  {
-    icon: <FaCalendarAlt className="text-cyan-400 text-xl" />,
-    title: "Discover Events",
-    desc: "Explore curated events happening across your campus and city.",
-  },
-  {
-    icon: <FaUserFriends className="text-cyan-400 text-xl" />,
-    title: "Personalized Feed",
-    desc: "AI-powered recommendations based on your interests.",
-  },
-  {
-    icon: <FaBell className="text-cyan-400 text-xl" />,
-    title: "Smart Reminders",
-    desc: "Get notified before events you care about start.",
-  },
-  {
-    icon: <FaStar className="text-cyan-400 text-xl" />,
-    title: "Join & Engage",
-    desc: "RSVP easily and interact with event organizers directly.",
-  },
-];
+const OneClickRegistration = () => {
+  const navigate = useNavigate();
 
-const HowHappenHubWorks = () => {
+  const features = [
+    {
+      icon: <Clock className="text-purple-400 text-2xl" />,
+      title: "Save 95% of registration time",
+      desc: "What used to take 15 minutes now takes just seconds.",
+    },
+    {
+      icon: <Cpu className="text-purple-400 text-2xl" />,
+      title: "Smart Profile-Matching",
+      desc: "Automatically fills required fields based on organizer requirements.",
+    },
+    {
+      icon: <Users className="text-purple-400 text-2xl" />,
+      title: "Team Formation Simplified",
+      desc: "Invite teammates with a link - they can join with one click too.",
+    },
+  ];
+
+  const profileStatus = [
+    { name: "Skills Profile", completed: true },
+    { name: "Educational Info", completed: true },
+    { name: "Contact Details", completed: true },
+  ];
+
+  const handleNavigateToSignup = () => {
+    navigate("/signup");
+  };
+
   return (
-    <section className="w-full py-20 px-6 bg-[#0B0B0B] text-white relative overflow-hidden">
-      {/* Background Glow */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(0,212,255,0.08)_0%,_#0B0B0B_80%)] -z-10"></div>
-
-      <div className="max-w-6xl mx-auto flex flex-col lg:flex-row items-center justify-between gap-16">
-        {/* LEFT SIDE — TIMELINE STYLE FEATURES */}
+    <section className="w-full bg-[#1F1F2E] text-white py-20 px-6 font-sans">
+      <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
+        {/* LEFT CONTENT */}
         <motion.div
-          initial={{ opacity: 0, x: -30 }}
+          initial={{ opacity: 0, x: -50 }}
           whileInView={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.8 }}
-          className="flex-1 relative"
+          transition={{ duration: 0.8, ease: "easeInOut" }}
         >
-          <h2 className="text-4xl md:text-5xl font-extrabold mb-12 text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-400 to-indigo-400">
-            How HappenHub Works
-          </h2>
-
-          <div className="relative pl-10">
-            {/* Vertical Line */}
-            <div className="absolute left-3 top-0 w-[2px] h-full bg-gradient-to-b from-cyan-400 via-blue-500 to-transparent"></div>
-
-            <div className="flex flex-col gap-10">
-              {features.map((f, i) => (
-                <motion.div
-                  key={i}
-                  whileHover={{ scale: 1.03 }}
-                  transition={{ type: "spring", stiffness: 200 }}
-                  className="relative flex items-start gap-4"
-                >
-                  {/* Dot on Line */}
-                  <div className="absolute left-[-1.2rem] w-3 h-3 rounded-full bg-cyan-400 shadow-[0_0_8px_2px_rgba(0,255,255,0.5)]"></div>
-
-                  <div className="p-3 bg-white/5 backdrop-blur-md rounded-xl border border-white/10">
-                    {f.icon}
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-semibold text-cyan-300">
-                      {f.title}
-                    </h3>
-                    <p className="text-gray-300 text-sm max-w-xs">{f.desc}</p>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
+          <div className="mb-6">
+            <span className="text-xs font-bold tracking-widest text-purple-300 bg-purple-500/20 px-3 py-1 rounded-full">
+              SIGNATURE FEATURE
+            </span>
           </div>
+          <h1 className="text-4xl md:text-5xl font-extrabold text-gray-100 mb-4">
+            1-Click Registration System
+          </h1>
+          <p className="text-gray-400 mb-10 max-w-lg">
+            Register for any hackathon or challenge with just one click. No more
+            repetitive forms, no more unnecessary steps. Create your profile once,
+            and you're all set to join any competition instantly.
+          </p>
+
+          <div className="flex flex-col gap-6 mb-10">
+            {features.map((feature, index) => (
+              <div key={index} className="flex items-start gap-4">
+                <div className="mt-1">{feature.icon}</div>
+                <div>
+                  <h3 className="font-semibold text-gray-200">{feature.title}</h3>
+                  <p className="text-gray-400 text-sm">{feature.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <button
+            onClick={handleNavigateToSignup}
+            className="flex items-center gap-2 px-6 py-3 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 transition-colors duration-300 shadow-lg shadow-purple-600/30"
+          >
+            Try it now <ArrowRight />
+          </button>
         </motion.div>
 
-        {/* RIGHT SIDE — SINGLE GLASS CARD */}
+        {/* RIGHT CARD */}
         <motion.div
-          initial={{ opacity: 0, x: 30 }}
+          initial={{ opacity: 0, x: 50 }}
           whileInView={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.8, delay: 0.2 }}
-          className="flex-1 w-full flex justify-center"
+          transition={{ duration: 0.8, ease: "easeInOut" }}
+          className="flex justify-center"
         >
-          <div className="relative w-[340px] md:w-[380px] bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 p-6 shadow-2xl">
-            {/* Top Card - Event Preview */}
-            <div className="p-5 rounded-xl bg-white/10 border border-white/10">
-              <h4 className="text-lg font-semibold text-cyan-300">
-                AI & Robotics Expo
-              </h4>
-              <p className="text-sm text-gray-300">Nov 24, 2025 · IIT Madras</p>
-              <div className="mt-3 flex gap-2">
-                <span className="px-3 py-1 text-xs bg-cyan-500/20 text-cyan-300 rounded-full border border-cyan-400/30">
-                  Tech
-                </span>
-                <span className="px-3 py-1 text-xs bg-blue-500/20 text-blue-300 rounded-full border border-blue-400/30">
-                  Workshop
-                </span>
+          <div className="w-full max-w-sm bg-[#2C2C44]/50 backdrop-blur-xl rounded-2xl border border-white/10 p-6 shadow-2xl">
+            {/* Card Header */}
+            <div className="flex justify-between items-start mb-5">
+              <div className="flex items-center gap-3">
+                <Shield className="text-purple-400 text-2xl" />
+                <div>
+                  <h4 className="font-bold text-gray-100">HappenHub Dev Meetup</h4>
+                  <p className="text-xs text-gray-400">By The HappenHub Community</p>
+                </div>
+              </div>
+              <span className="text-xs font-medium bg-green-500/20 text-green-300 px-3 py-1 rounded-full border border-green-400/30">
+                Registration Open
+              </span>
+            </div>
+
+            {/* Participants Info */}
+            <div className="flex justify-between items-center text-sm text-gray-400 mb-6">
+              <div className="flex items-center">
+                <div className="flex -space-x-2">
+                  <img className="inline-block h-6 w-6 rounded-full ring-2 ring-[#2C2C44]" src="https://i.pravatar.cc/150?u=a042581f4e29026704d" alt="User 1"/>
+                  <img className="inline-block h-6 w-6 rounded-full ring-2 ring-[#2C2C44]" src="https://i.pravatar.cc/150?u=a042581f4e29026704e" alt="User 2"/>
+                  <img className="inline-block h-6 w-6 rounded-full ring-2 ring-[#2C2C44]" src="https://i.pravatar.cc/150?u=a042581f4e29026704f" alt="User 3"/>
+                </div>
+                <span className="ml-3">127 participants</span>
+              </div>
+              <span>5 days left</span>
+            </div>
+
+            {/* Profile Status */}
+            <div className="mb-6">
+              <h5 className="text-xs font-bold text-gray-500 tracking-wider mb-3">YOUR PROFILE STATUS</h5>
+              <div className="flex flex-col gap-2">
+                {profileStatus.map((item, index) => (
+                  <div key={index} className="flex justify-between items-center text-sm">
+                    <span className="text-gray-300">{item.name}</span>
+                    <span className="text-green-400 flex items-center gap-1">
+                      <CheckCircle size={16} /> Complete
+                    </span>
+                  </div>
+                ))}
               </div>
             </div>
 
-            {/* Divider */}
-            <div className="w-full h-[1px] my-6 bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
-
-            {/* Bottom Card - CTA */}
-            <div className="p-5 rounded-xl bg-white/10 border border-white/10">
-              <h4 className="text-lg font-semibold mb-2">Ready to Join?</h4>
-              <p className="text-sm text-gray-300 mb-4">
-                Sign up now and personalize your event feed instantly.
-              </p>
-              <button className="px-6 py-2 bg-gradient-to-r from-cyan-400 to-blue-400 text-black font-semibold rounded-full hover:scale-105 transition-transform shadow-md">
-                Sign Up Free
-              </button>
+            {/* CTA Button */}
+            <button
+              onClick={handleNavigateToSignup}
+              className="w-full py-3 bg-purple-600 text-white font-bold rounded-lg flex items-center justify-center gap-2 hover:bg-purple-700 transition-all duration-300 shadow-lg shadow-purple-600/40 transform hover:scale-105"
+            >
+              Join with 1-Click <ArrowRight />
+            </button>
+            
+            <div className="flex justify-center gap-2 mt-4">
+                <div className="w-2 h-2 rounded-full bg-purple-500"></div>
+                <div className="w-2 h-2 rounded-full bg-gray-600"></div>
+                <div className="w-2 h-2 rounded-full bg-gray-600"></div>
             </div>
-
-            {/* Subtle Glow */}
-            <div className="absolute -bottom-6 -right-6 w-24 h-24 bg-cyan-400/20 rounded-full blur-3xl"></div>
           </div>
         </motion.div>
       </div>
@@ -119,4 +146,4 @@ const HowHappenHubWorks = () => {
   );
 };
 
-export default HowHappenHubWorks;
+export default OneClickRegistration;

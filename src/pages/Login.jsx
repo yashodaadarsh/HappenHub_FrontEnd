@@ -1,9 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FcGoogle } from "react-icons/fc";
-import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
+import { Eye, EyeOff } from "lucide-react"; // Using Lucide for consistency
 import { useDispatch, useSelector } from "react-redux";
-import { loginUser, clearError, fetchProfile } from "../redux/slices/auth.slice";
-import { useNavigate } from "react-router-dom";
+import { loginUser, clearError, fetchProfile } from "../redux/slices/auth.slice"; // Assuming this path is correct
+import { useNavigate, Link } from "react-router-dom";
 import toast, { Toaster } from "react-hot-toast";
 
 const LoginPage = () => {
@@ -17,13 +17,14 @@ const LoginPage = () => {
     password: "",
   });
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (isLoggedIn) {
       navigate("/dashboard");
     }
   }, [isLoggedIn, navigate]);
 
-  React.useEffect(() => {
+  useEffect(() => {
+    // Clear any previous errors when the component unmounts
     return () => {
       dispatch(clearError());
     };
@@ -36,118 +37,122 @@ const LoginPage = () => {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-
     const result = await dispatch(loginUser(formData));
     if (loginUser.fulfilled.match(result)) {
-      toast.success("Login successful! Welcome back!");
-      // Fetch profile after successful login
+      toast.success("Login successful! Welcome back.");
       dispatch(fetchProfile());
     }
   };
 
   const handleGoogleLogin = () => {
+    // Implement Google login logic here
     console.log("Google login clicked");
+    toast.error("Google login is not implemented yet.");
   };
 
   return (
-    <div className="w-full mx-auto min-h-screen bg-richblack-900 text-white py-12 px-4 md:px-16">
+    <div className="w-full min-h-screen bg-[#1F1F2E] text-gray-200 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 font-sans">
       <Toaster position="top-right" />
-      {/* Unified Heading */}
-      <div className="text-center mb-12">
-        <h2 className="text-4xl md:text-5xl font-bold text-white animate-fadeIn">
-          Welcome Back!
-        </h2>
-        <p className="text-gray-400 text-sm mt-2 animate-fadeIn delay-200">
-          Access your dashboard seamlessly.
-        </p>
-      </div>
-
-      <div className="flex flex-col md:flex-row items-center md:items-start justify-center gap-12 md:gap-16 w-full">
+      <div className="max-w-6xl w-full mx-auto grid md:grid-cols-2 gap-16 items-center">
         {/* Left Side: Form */}
-        <div className="flex-1 flex flex-col justify-center items-center">
-          <form
-            onSubmit={handleLogin}
-            className="w-full max-w-xl flex flex-col gap-6" // increased max-width
-          >
-            {/* Email */}
-            <div className="flex flex-col gap-2">
-              <label htmlFor="email" className="text-sm text-gray-200">
-                Email <span className="text-red-400">*</span>
+        <div className="w-full max-w-md mx-auto">
+          <div className="text-left mb-8">
+            <h2 className="text-4xl font-extrabold text-gray-100">
+              Welcome Back!
+            </h2>
+            <p className="text-gray-400 mt-2">
+              Log in to discover what's happening next.
+            </p>
+          </div>
+
+          <form onSubmit={handleLogin} className="flex flex-col gap-5">
+            {/* Email Input */}
+            <div>
+              <label htmlFor="email" className="text-sm font-medium text-gray-400">
+                Email Address
               </label>
               <input
+                id="email"
                 type="email"
                 name="email"
-                placeholder="your@email.com"
+                placeholder="you@example.com"
                 onChange={handleInputChange}
                 value={formData.email}
-                className="w-full bg-transparent px-6 py-5 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-300 focus:border-yellow-300 border border-richblack-600 transition-all duration-300 transform hover:scale-[1.02]"
+                className="w-full mt-2 bg-[#2C2C44] px-4 py-3 rounded-lg text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 border border-gray-700 transition-all"
                 required
               />
             </div>
 
-            {/* Password */}
-            <div className="relative flex flex-col gap-2">
-              <label htmlFor="password" className="text-sm text-gray-200">
-                Password <span className="text-red-400">*</span>
-              </label>
+            {/* Password Input */}
+            <div className="relative">
+              <div className="flex justify-between items-center">
+                <label
+                  htmlFor="password"
+                  className="text-sm font-medium text-gray-400"
+                >
+                  Password
+                </label>
+                <Link to="/forgot-password" className="text-sm text-purple-400 hover:underline">
+                    Forgot password?
+                </Link>
+              </div>
               <input
+                id="password"
                 type={showPassword ? "text" : "password"}
                 name="password"
                 placeholder="Enter your password"
                 onChange={handleInputChange}
                 value={formData.password}
-                className="w-full bg-transparent px-6 py-5 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-300 focus:border-yellow-300 border border-richblack-600 pr-14 transition-all duration-300 transform hover:scale-[1.02]"
+                className="w-full mt-2 bg-[#2C2C44] px-4 py-3 rounded-lg text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 border border-gray-700 pr-10 transition-all"
                 required
               />
               <span
-                className="absolute text-4xl right-4 bottom-[16px] md:bottom-[14px] cursor-pointer text-gray-400"
                 onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-[46px] cursor-pointer text-gray-500 hover:text-gray-300"
               >
-                {showPassword ? <AiOutlineEyeInvisible /> : <AiOutlineEye />}
+                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
               </span>
             </div>
+            
+            {error && (
+              <div className="text-pink-400 text-sm text-center">
+                {error}
+              </div>
+            )}
 
             {/* Submit Button */}
             <button
               type="submit"
               disabled={authLoading}
-              className="w-full py-5 rounded-lg font-semibold text-richblack-900 transition-all duration-300 transform hover:scale-105 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-              style={{
-                background: "linear-gradient(to right, #fffad1, #fff6c2)",
-              }}
+              className="w-full py-3 mt-2 rounded-lg font-semibold bg-purple-600 text-white hover:bg-purple-700 transition-colors duration-300 shadow-lg shadow-purple-600/30 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {authLoading ? "Logging In..." : "Log In"}
             </button>
 
-            {error && (
-              <div className="text-red-400 text-sm text-center mt-2">
-                {error}
-              </div>
-            )}
-
             {/* OR Divider */}
-            <div className="flex items-center my-4">
-              <hr className="flex-grow border-gray-600" />
-              <span className="mx-3 text-gray-400 text-sm">OR</span>
-              <hr className="flex-grow border-gray-600" />
+            <div className="flex items-center my-2">
+              <hr className="flex-grow border-gray-700" />
+              <span className="mx-4 text-gray-500 text-sm">OR</span>
+              <hr className="flex-grow border-gray-700" />
             </div>
 
-            {/* Google Login */}
+            {/* Google Login Button */}
             <button
               type="button"
               onClick={handleGoogleLogin}
-              className="w-full flex items-center justify-center gap-3 py-5 rounded-lg border border-gray-600 font-semibold text-white transition-all duration-300 transform hover:scale-105 hover:bg-gradient-to-r hover:from-gray-300 hover:to-yellow-200 hover:text-richblack-900 cursor-pointer"
+              className="w-full flex items-center justify-center gap-3 py-3 rounded-lg border border-gray-700 font-semibold text-gray-300 hover:bg-white/5 transition-colors duration-300"
             >
-              <FcGoogle size={26} />
-              <span>Log In with Google</span>
+              <FcGoogle size={22} />
+              <span>Continue with Google</span>
             </button>
           </form>
         </div>
 
-        {/* Right Side: Image */}
-        <div className="flex-1 hidden md:flex flex-col justify-center items-center">
-          <div className="w-full max-w-xl h-96 bg-gray-700 rounded-xl flex items-center justify-center text-gray-200 font-semibold animate-fadeIn">
-            Image Placeholder
+        {/* Right Side: Image/Graphic */}
+        <div className="hidden md:flex justify-center items-center">
+          <div className="w-full max-w-md h-[450px] bg-[#2C2C44] rounded-2xl border border-white/10 flex items-center justify-center text-gray-500 font-semibold shadow-2xl shadow-purple-900/20">
+            {/* You can place an illustration or image here */}
+            Graphic / Illustration
           </div>
         </div>
       </div>
