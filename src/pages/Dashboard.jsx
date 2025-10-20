@@ -30,7 +30,7 @@ const Dashboard = () => {
   const isMainDashboard = location.pathname === "/dashboard";
   const isLoading = (loading || authLoading || (!userDetails && isLoggedIn));
 
-  if (isLoading && isMainDashboard) {
+  if (loading && isMainDashboard) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#1F1F2E] text-gray-300 font-sans">
         Loading Your Personalized Hub...

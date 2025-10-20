@@ -2,12 +2,14 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 import { SIGNUP, LOGIN, PING_AUTH, GET_PROFILE, UPDATE_PROFILE, GET_PERSONALIZED_FEED } from "../../api/apis";
 import { fetchWishlistEvents } from "./wishlist.slice";
+import { fetchPersonalizedFeed } from "./recommendation.slice";
 
 export const signupUser = createAsyncThunk(
   "auth/signupUser",
   async (userData, { rejectWithValue }) => {
     try {
       const response = await axios.post(SIGNUP, userData);
+      await fetchWishlistEvents(userData.email);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || "Signup failed");
@@ -115,6 +117,9 @@ export const authSlice = createSlice({
       state.token = action.payload;
       state.isLoggedIn = true;
     },
+    setIsLoggedIn: (state, action) => {
+      state.isLoggedIn = action.payload;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -168,6 +173,7 @@ export const authSlice = createSlice({
         state.isLoggedIn = true;
         console.log("Fetched profile payload  :", action.payload);
         state.userDetails = action.payload;
+        state.user = action.payload;
         // After profile is loaded, the dashboard component will handle fetching personalized feed
       })
       .addCase(fetchProfile.rejected, (state, action) => {
@@ -182,6 +188,7 @@ export const authSlice = createSlice({
       .addCase(updateProfile.fulfilled, (state, action) => {
         state.authLoading = false;
         state.userDetails = action.payload;
+        state.user = action.payload;
       })
       .addCase(updateProfile.rejected, (state, action) => {
         state.authLoading = false;
@@ -203,6 +210,9 @@ export const initializeAuth = () => (dispatch) => {
 
 export const initializeAuthAndFetchFeed = () => (dispatch, getState) => {
   const token = localStorage.getItem("authToken");
+
+  console.log("getting callled ");
+
   if (token) {
     // Set token in state and fetch profile
     dispatch({ type: 'auth/setToken', payload: token });
@@ -247,5 +257,7 @@ export const initializeAuthAndFetchFeed = () => (dispatch, getState) => {
 //     }
 //   }
 // );
+
+export const { setIsLoggedIn , setUserDetails } = authSlice.actions;
 
 export default authSlice.reducer;

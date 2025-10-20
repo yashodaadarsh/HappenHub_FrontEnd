@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import toast, { Toaster } from "react-hot-toast";
 
 // Import Redux actions
-import { signupUser, clearError as clearAuthError } from "../redux/slices/auth.slice";
+import { signupUser, clearError as clearAuthError, setIsLoggedIn } from "../redux/slices/auth.slice";
 import {
   setCurrentStep,
   updateFormData,
@@ -73,10 +73,26 @@ const SignupPage = () => {
     }
     
     dispatch(setLoading(true));
-    const result = await dispatch(signupUser(formData));
+    
+    console.log("Submitting signup with data:", formData);
+
+    const finalData = {
+      address : formData.address,
+      password : formData.password,
+      firstName : formData.firstName,
+      lastName : formData.lastName,
+      email : formData.email,
+      interests : formData.interests.map(interest => interest.toUpperCase()),
+      preferences : formData.preferences.map(preference => preference.toUpperCase()),
+    }
+
+    console.log("Final signup data:", finalData);
+
+    const result = await dispatch(signupUser(finalData));
     
     if (signupUser.fulfilled.match(result)) {
       toast.success("Account created successfully! Welcome aboard.");
+      setIsLoggedIn(true);
       dispatch(resetSignup());
       navigate("/dashboard");
     }

@@ -8,13 +8,13 @@ import { HeartCrack } from "lucide-react";
 const Wishlist = () => {
   const dispatch = useDispatch();
   const { wishlistEvents, loading, error } = useSelector((state) => state.wishlist);
-  const { userDetails } = useSelector((state) => state.auth);
+  const { userDetails  , isLoggedIn} = useSelector((state) => state.auth);
 
   useEffect(() => {
     if (userDetails?.email) {
       dispatch(fetchWishlistEvents(userDetails.email));
     }
-  }, [dispatch, userDetails]);
+  }, [dispatch, userDetails , isLoggedIn]);
 
   if (loading) {
     return <div className="p-6 text-center text-gray-400">Loading your wishlist...</div>;
